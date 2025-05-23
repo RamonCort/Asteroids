@@ -1,0 +1,81 @@
+@startuml Diagrama
+class Nave{
++ Disparar(Proyectil):Colision
+}
+class Colision
+class Asteroide
+class Bala
+class Misil
+class Corazon
+class Vida
+class Puntaje
+class Velocidad
+class Nivel{
++ SubirNivel(Nivel):Velocidad
+}
+class Proyectil
+class Escudo
+class Item
+class Estrella{
++ ActivarInmunidad(Escudo):Tiempo
+}
+class Obstaculo
+class Satelite
+class AstroNave
+class Trasbordador
+class Laser
+class Jugador
+class Tiempo 
+class Ecenario
+class AgujeroNegro{
++ AparecerEnElEspacio(Puntaje):Obstaculo
+}
+class AgujeroDeGusano
+class PawerUp
+class Espacio
+class Record
+class OVNI
+class Decremento{
++ ActivarDecremento(Velocidad):Tiempo
+}
+Jugador"1"*-- "1..4"Puntaje
+Jugador"1"*-- "1"Record
+Jugador "1" o-- "1" Nave
+OVNI"1"--|> Nave
+Trasbordador --|> Nave
+AstroNave --|> Nave
+Nave"1"*--"*"Velocidad
+Nave"1"*--"3"Vida
+Nave"1"*--"1,2,3"Escudo
+Nave"1"*--"*"Proyectil
+Laser--|>Proyectil
+Bala--|>Proyectil
+Misil--|>Proyectil
+Corazon"3"--|>"1"Vida
+Escudo--|>Item
+Estrella--|>Item
+PawerUp--|>Item
+Decremento--|>Item
+Jugador"1"*--"*"Obstaculo
+AgujeroNegro--|>Obstaculo
+Ecenario"1"*--"1,2"AgujeroNegro
+Ecenario"1"*--"*"Satelite
+Ecenario"1"*--"*"Asteroide
+Ecenario"1"*--"*"Velocidad
+Ecenario"1"*--"4"Nivel
+AgujeroDeGusano--|>Ecenario
+Escudo*--Tiempo
+Estrella*--Tiempo
+Espacio--|>Ecenario
+Espacio"1"*--"*"Item
+Jugador"1" o-- "*"Item
+Decremento o-- Velocidad
+Asteroide--|>Obstaculo
+Satelite--|>Obstaculo
+Record "1" o--Puntaje
+Record *-- Tiempo
+Ecenario*-- "*"Obstaculo
+Proyectil*--Colision
+Obstaculos*--"*"Colision
+Velocida o-- Puntaje
+@enduml
