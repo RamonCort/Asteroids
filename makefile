@@ -1,25 +1,30 @@
 PROYECTO := programa
-LIB :=-lftxui-screen -lftxui-dom -lftxui-component
-CXX:=c++
-INCLUDE := -Iinclude 
+CXX := c++
+LIB := -lftxui-screen -lftxui-dom -lftxui-component
+INCLUDE := -Iinclude
 EXE := bin/$(PROYECTO)
 
-$(EXE) : src/main.cpp
+.PHONY: all run Nave archivos clean
+
+all: $(EXE)
+
+$(EXE): src/main.cpp
 	$(CXX) $< -o $@ $(LIB) $(INCLUDE) -std=c++17
 
-run: $(EXE)
-	./$<
+run: $(EXE)
+	./$(EXE)
 
-Nave : bin/Nave
-	./$<
+Nave: bin/Nave
+	./bin/Nave
 
 bin/Nave: src/Nave.cpp
 	$(CXX) $< -o $@ -std=c++17
 
-archivos : bin/archivos
-	./$<
+archivos: bin/archivos
+	./bin/archivos
 
-bin/archivos : src/archivos.cpp
-	$(CXX)  $< -o $@ -std=c++17
+bin/archivos: src/archivos.cpp
+	$(CXX) $< -o $@ -std=c++17
 
-	
+clean:
+	del /Q bin\*.exe

@@ -18,18 +18,19 @@ int main(int argc, const char **argv)
     while (true) { 
 	system("cls");
 	ocultar();
-    MARGEN_LIMITE();
-    cursor(50, 14);
+    //MARGEN_LIMITE();
+   // cursor(50, 14);
     printf("Welcome to the game ");
-    cursor(44, 15);
+   // cursor(44, 15);
     printf("Press any key to enter the game");
-    cursor(50, 20);
+    //cursor(50, 20);
     system("pause > NUL");
-    cursor(50, 14);
+    //cursor(50, 14);
     printf("                                                   "); 
-    cursor(44, 15);
+   // cursor(44, 15);
     printf("                                                   ");  
-     cursor(50, 20);
+    // cursor(50, 20);
     printf("                                                   "); 
+    }
     return 0;
-}
+    }
