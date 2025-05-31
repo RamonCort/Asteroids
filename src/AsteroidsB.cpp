@@ -4,6 +4,9 @@
 #include<stdlib.h>
 #include<list>
 #include<cstdlib>
+#include <SFML/Audio.hpp>
+#include <iostream>
+using namespace sf;
 using namespace std;
 
 #define color SetConsoleTextAttribute
@@ -374,7 +377,14 @@ int main()
 	hprincipal= GetStdHandle (STD_OUTPUT_HANDLE);
 	
 
-	while (true) { 
+	while (true) {
+        Music music;
+        if (!music.openFromFile("videoplayback.ogg")) { // Cambia la extensión si es necesario
+            cout << "No se pudo cargar la música.\n";
+            return -1;
+        }
+    music.setLoop(true); // Opcional: para que la música se repita
+    music.play();
 	system("cls");
 	ocultar();
     MARGEN_LIMITE();

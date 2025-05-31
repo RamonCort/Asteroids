@@ -1,33 +1,21 @@
-PROYECTO := programa
 CXX := c++
-LIB := -lftxui-screen -lftxui-dom -lftxui-component
-INCLUDE := -Iinclude
-EXE := bin/$(PROYECTO)
+EXE := bin/AsteroidsB
 
-.PHONY: all run Nave archivos clean AsteroidsB
+.PHONY: all clean AsteroidsB runAsteroidsB
 
 all: $(EXE)
 
-$(EXE): src/main.cpp | bin
-	$(CXX) $< -o $@ $(LIB) $(INCLUDE) -std=c++17
+AsteroidsB: $(EXE)
+	./$(EXE)
 
-	run: bin/AsteroidsB
-	./bin/AsteroidsB
+runAsteroidsB: $(EXE)
+	./$(EXE)
 
-archivos: bin/archivos
-	./bin/archivos
-
-bin/archivos: src/archivos.cpp | bin
-	$(CXX) $< -o $@ -std=c++17
-
-clean:
-	del /Q bin\*.exe
-
-AsteroidsB: bin/AsteroidsB
-	./bin/AsteroidsB
-
-bin/AsteroidsB: src/AsteroidsB.cpp | bin
-	$(CXX) $< -o $@ -std=c++17
+$(EXE): src/AsteroidsB.cpp | bin
+	$(CXX) $< -o $@ -std=c++17 -lsfml-audio -lsfml-system
 
 bin:
 	mkdir bin
+
+clean:
+	del /Q bin\*.exe
