@@ -379,7 +379,7 @@ int main()
 
 	while (true) {
         Music music;
-        if (!music.openFromFile("videoplayback.ogg")) { // Cambia la extensión si es necesario
+        if (!music.openFromFile("C:/Users/ramon/Desktop/Proyectos/c++/Asteroids/assets/music/videoplayback.ogg")) {
             cout << "No se pudo cargar la música.\n";
             return -1;
         }
