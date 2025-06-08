@@ -1,3 +1,10 @@
 #pragma once
 
-// ...archivo de cabecera vacío para la clase Punto...
+class Punto {
+public:
+    Punto();
+    void sumar();
+    int getPuntos() const;
+private:
+    int puntos;
+};

@@ -2,10 +2,10 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 
-class Puntaje {
+class Vida {
 public:
-    Puntaje(float windowWidth);
-    void setPuntos(int puntos);
+    Vida();
+    void setVidas(int vidas);
     void draw(sf::RenderWindow& window);
 private:
     sf::RectangleShape box;

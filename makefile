@@ -1,9 +1,15 @@
 CXX := c++
 EXE := bin/AsteroidsB
 
-.PHONY: all clean AsteroidsB runAsteroidsB
+.PHONY: all clean AsteroidsB runAsteroidsB Nave runNave runAsteroids run
 
-all: $(EXE)
+all: run
+
+run: runAsteroids
+
+runAsteroids: src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp
+	g++ -Iinclude -o runAsteroids src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+	./runAsteroids
 
 AsteroidsB: $(EXE)
 	./$(EXE)
@@ -32,16 +38,3 @@ runNave: $(NAVE_EXE)
 
 $(NAVE_EXE): src/Nave.cpp | bin
 	$(CXX) $< -o $@ -std=c++17 -lsfml-graphics -lsfml-window -lsfml-system
-
-CXX = g++
-CXXFLAGS = -Iinclude
-LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
-
-SRC = src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp
-OUT = runAsteroids
-
-runAsteroids: FORCE $(SRC)
-	g++ -Iinclude -o $(OUT) $(SRC) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
-	./$(OUT)
-
-FORCE:
