@@ -4,12 +4,17 @@
 
 class Margen {
 public:
-    Margen(float ancho, float alto, float grosor = 5.f);
+    Margen(float anchoVentana, float altoVentana, float grosor = 2.f);
     void draw(sf::RenderWindow& window);
-    void limitar(Nave& nave);
+    void limitar(Nave& nave); // Declaración de la función limitar
 private:
-    float ancho;
-    float alto;
-    float grosor;
-    sf::RectangleShape top, bottom, left, right;
+    sf::RectangleShape lineaSuperior;
+    sf::RectangleShape lineaInferior;
+    sf::RectangleShape lineaIzquierda;
+    sf::RectangleShape lineaDerecha;
+    sf::CircleShape esquinaSupIzq;
+    sf::CircleShape esquinaSupDer;
+    sf::CircleShape esquinaInfIzq;
+    sf::CircleShape esquinaInfDer;
+    float ancho, alto, grosor; // Guardar dimensiones para limitar
 };

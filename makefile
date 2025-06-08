@@ -37,9 +37,11 @@ CXX = g++
 CXXFLAGS = -Iinclude
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
-SRC = src/Asteroids.cpp src/Ventana.cpp
+SRC = src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp
 OUT = runAsteroids
 
-runAsteroids: src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp
-	g++ -Iinclude -o runAsteroids src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+runAsteroids: FORCE $(SRC)
+	g++ -Iinclude -o $(OUT) $(SRC) -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 	./$(OUT)
+
+FORCE:

@@ -4,6 +4,7 @@
 #include <iostream>
 #include "../include/Nave.hpp"
 #include "../include/Misil.hpp"
+#include "../include/Margen.hpp" // <-- Añadir esta línea
 #include <vector>
 
 // Constructor
@@ -37,6 +38,9 @@ void Ventana::mostrar() {
     std::vector<Misil> misiles;
     bool disparoAnterior = false;
 
+    // Instanciar el margen (usar el tamaño de la ventana)
+    Margen margen(window.getSize().x, window.getSize().y);
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -45,8 +49,14 @@ void Ventana::mostrar() {
         }
         window.clear(sf::Color::Black);
 
+        // Dibuja el margen antes de los demás elementos
+        margen.draw(window);
+
         // Movimiento nave
         nave.mover(window);
+
+        // Limitar la nave dentro del margen
+        margen.limitar(nave);
 
         // Disparo de misil al presionar espacio (solo una vez por pulsación)
         bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);

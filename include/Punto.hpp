@@ -1,0 +1,3 @@
+#pragma once
+
+// ...archivo de cabecera vacío para la clase Punto...
