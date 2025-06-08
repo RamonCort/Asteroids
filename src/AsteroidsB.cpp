@@ -5,7 +5,9 @@
 #include<list>
 #include<cstdlib>
 #include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
 #include <iostream>
+#include "../include/Ventana.hpp"
 using namespace sf;
 using namespace std;
 
@@ -372,6 +374,25 @@ class Proyectil{
 
 int main()
 {
+    // Mostrar ventana de bienvenida (opcional)
+    // Ventana ventana;
+    // ventana.mostrar();
+
+    // Crear una ventana SFML al iniciar el juego
+    RenderWindow window(VideoMode(400, 300), "Asteroids - Ventana de inicio");
+    while (window.isOpen())
+    {
+        Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == Event::Closed)
+                window.close();
+        }
+        window.clear(Color::Black);
+        // Puedes dibujar aquí si lo deseas
+        window.display();
+    }
+
  int top[5] = {0, 0, 0, 0, 0};
 	HANDLE hprincipal;
 	hprincipal= GetStdHandle (STD_OUTPUT_HANDLE);

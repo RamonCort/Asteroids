@@ -1,93 +1,35 @@
-#include <SFML/Graphics.hpp>
+#include "../include/Nave.hpp"
 #include <iostream>
-using namespace std;
-class Nave
-{
-public:
-    Nave(sf::Vector2f position)
-    {
-        shape.setSize(sf::Vector2f(50, 50));
-        shape.setPosition(position);
-        shape.setFillColor(sf::Color::Transparent);
 
-        // Cambia la ruta a la imagen de tu nave
-        if (!texture.loadFromFile("./assets/images/nave.png"))
-        {
-            cout << "No se pudo cargar la imagen de la nave" << std::endl;
-        }
-        sprite = sf::Sprite(texture);
-        sprite.setPosition(position);
-
-        // Ajusta el tamaño del sprite si es necesario
-        sprite.setScale(0.5f, 0.5f); // Cambia el factor según el tamaño de tu imagen
+Nave::Nave(float x, float y) {
+    if (!texture.loadFromFile("assets/images/nave.png")) {
+        std::cerr << "No se pudo cargar la imagen: assets/images/nave.png" << std::endl;
     }
+    sprite.setTexture(texture);
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    // Cambia el tamaño de la nave (por ejemplo, al doble)
+    sprite.setScale(2.0f, 2.0f);
+    sprite.setOrigin(bounds.width / 2, bounds.height / 2);
+    sprite.setPosition(x, y);
+    velocidad = 0.5f; // 10 veces más lento que 5.0f
+}
 
-    void move(float offsetX, float offsetY)
-    {
-        sprite.move(offsetX, offsetY);
-        shape.move(offsetX, offsetY);
-    }
+void Nave::mover(const sf::RenderWindow& window) {
+    // Movimiento libre, sin límites de ventana
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+        sprite.move(-velocidad, 0);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+        sprite.move(velocidad, 0);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+        sprite.move(0, -velocidad);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+        sprite.move(0, velocidad);
+}
 
-    void draw(sf::RenderWindow &window)
-    {
-        window.draw(sprite);
-        // window.draw(shape); // Si no quieres mostrar el cuadro, comenta esta línea
-    }
+void Nave::draw(sf::RenderWindow& window) {
+    window.draw(sprite);
+}
 
-    void update()
-    {
-        // Si tienes animación de nave, ajusta aquí el recorte
-        // sprite.setTextureRect(sf::IntRect(...));
-    }
-
-private:
-    sf::RectangleShape shape;
-    sf::Sprite sprite;
-    sf::Texture texture;
-};
-
-double velocidad = 0.5;
-
-int main()
-{
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Nave Espacial");
-
-    Nave nave(sf::Vector2f(400, 300));
-
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                window.close();
-            }
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-        {
-            nave.move(-velocidad, 0);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-        {
-            nave.move(velocidad, 0);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-        {
-            nave.move(0, -velocidad);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-        {
-            nave.move(0, velocidad);
-        }
-
-        nave.update();
-
-        window.clear();
-        nave.draw(window);
-        window.display();
-    }
-
-    return 0;
+sf::Sprite& Nave::getSprite() {
+    return sprite;
 }
