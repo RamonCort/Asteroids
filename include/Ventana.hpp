@@ -6,6 +6,7 @@ class Ventana {
 public:
     Ventana(int width = 400, int height = 300); // Cambia el constructor
     void mostrar();
+    void mostrarInicio(); // <-- Nuevo método para la pantalla de inicio
 private:
     sf::RenderWindow window;
     sf::Texture texture;
