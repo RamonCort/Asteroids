@@ -10,7 +10,6 @@ public:
     void dibujar(sf::RenderWindow& window);
     void mover(float limiteY, float limiteX, float velocidadY = 3.0f); // velocidadY por defecto 3.0f
     void colision(Nave& nave);
-private:
-    float x, y;
-    sf::CircleShape shape;
+    sf::CircleShape shape; // <-- Hacer shape público para colisión
+    float x, y; // <-- Hacer x, y públicos
 };

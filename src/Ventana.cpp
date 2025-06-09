@@ -64,6 +64,7 @@ void Ventana::mostrar() {
         float ax = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
         float ay = static_cast<float>(rand() % 100);
         asteroides.emplace_back(ax, ay);
+        asteroidesCreados++; // <--- suma aquí también
     }
 
     bool pAnterior = false;
@@ -94,6 +95,48 @@ void Ventana::mostrar() {
             misiles.emplace_back(misilX, misilY);
         }
         disparoAnterior = disparoActual;
+
+        // --- COLISIONES MISIL-ASTEROIDE ---
+        for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
+            bool asteroideEliminado = false;
+            for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
+                if (itAst->shape.getGlobalBounds().intersects(itMisil->getBounds())) {
+                    // Eliminar misil y asteroide
+                    itMisil = misiles.erase(itMisil);
+                    itAst = asteroides.erase(itAst);
+                    asteroideEliminado = true;
+                    punto.sumar(10); // Sumar 10 puntos por colisión
+                    asteroidesCreados--; // <--- resta aquí al eliminar un asteroide
+                    break; // Salir del bucle de misiles, asteroide ya eliminado
+                } else {
+                    ++itMisil;
+                }
+            }
+            if (!asteroideEliminado) {
+                ++itAst;
+            }
+            // Si se eliminó el asteroide, itAst ya está actualizado
+        }
+
+        // --- COLISIONES ASTEROIDE-NAVE ---
+        for (auto& ast : asteroides) {
+            if (ast.shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
+                vidas--;
+                vida.setVidas(vidas);
+                // Reposicionar el asteroide arriba en una posición aleatoria
+                ast.shape.setPosition(
+                    static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20),
+                    0
+                );
+                ast.y = 0;
+                ast.x = ast.shape.getPosition().x;
+                // Si se acabaron las vidas, cerrar la ventana y terminar el juego
+                if (vidas <= 0) {
+                    window.close();
+                    break;
+                }
+            }
+        }
 
         // Mover y dibujar misiles
         for (auto it = misiles.begin(); it != misiles.end(); ) {
