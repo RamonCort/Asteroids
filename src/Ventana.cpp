@@ -178,15 +178,33 @@ void Ventana::mostrar() {
             }
             disparoAnterior = disparoActual;
 
+            // --- COLISIONES ASTEROIDE-NAVE ---
+            for (auto& ast : asteroides) {
+                if (ast.colisionaConNave(nave)) {
+                    vidas--;
+                    vida.setVidas(vidas);
+                    ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
+                    ast.y = 0;
+                    ast.sprite.setPosition(ast.x, ast.y);
+                    if (vidas <= 0) {
+                        gameOver = true;
+                        break;
+                    }
+                }
+            }
+
             // --- COLISIONES MISIL-ASTEROIDE ---
             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                 bool asteroideEliminado = false;
                 for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
-                    if (itAst->shape.getGlobalBounds().intersects(itMisil->getBounds())) {
+                    if (itAst->colisionaConMisil(*itMisil)) {
                         itMisil = misiles.erase(itMisil);
                         itAst = asteroides.erase(itAst);
                         asteroideEliminado = true;
                         punto.sumar(10);
+                        // Aumentar velocidad de la nave y de los asteroides cada vez que destruye un asteroide
+                        nave.setVelocidad(nave.getVelocidad() + 0.05f);
+                        velocidadAsteroide += 0.05f;
                         break;
                     } else {
                         ++itMisil;
@@ -194,24 +212,6 @@ void Ventana::mostrar() {
                 }
                 if (!asteroideEliminado) {
                     ++itAst;
-                }
-            }
-
-            // --- COLISIONES ASTEROIDE-NAVE ---
-            for (auto& ast : asteroides) {
-                if (ast.shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
-                    vidas--;
-                    vida.setVidas(vidas);
-                    ast.shape.setPosition(
-                        static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20),
-                        0
-                    );
-                    ast.y = 0;
-                    ast.x = ast.shape.getPosition().x;
-                    if (vidas <= 0) {
-                        gameOver = true;
-                        break;
-                    }
                 }
             }
 

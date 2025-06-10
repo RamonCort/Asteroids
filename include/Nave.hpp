@@ -8,6 +8,8 @@ public:
     void draw(sf::RenderWindow& window);
     void mover(const sf::RenderWindow& window);
     sf::Sprite& getSprite(); // <-- Añadido para Margen
+    float getVelocidad() const { return velocidad; }
+    void setVelocidad(float v) { velocidad = v; }
 protected:
     sf::Texture texture;
     sf::Sprite sprite;
