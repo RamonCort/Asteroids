@@ -1,4 +1,5 @@
 #include "../include/Ventana.hpp"
+#include "../include/Oportunidad.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <iostream>
@@ -53,7 +54,7 @@ void Ventana::mostrarInicio() {
 }
 
 // Nueva función para seleccionar nave
-int seleccionarNave(sf::RenderWindow& window) {
+int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     sf::Texture tex1, tex2;
     tex1.loadFromFile("assets/images/AstroNave_pixil.png");
     tex2.loadFromFile("assets/images/nave.png");
@@ -63,8 +64,6 @@ int seleccionarNave(sf::RenderWindow& window) {
     nave2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
     int seleccion = 0; // 0 = AstroNave, 1 = nave normal
     bool elegido = false;
-    sf::Font font;
-    font.loadFromFile("assets/arial.ttf");
     sf::Text txt("Elige tu nave: ← → ENTER", font, 32);
     txt.setFillColor(sf::Color::White);
     txt.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f-100);
@@ -101,7 +100,15 @@ void Ventana::mostrar() {
     fondoSprite.setScale(scaleX, scaleY);
 
     // --- Selección de nave ---
-    int naveSeleccionada = seleccionarNave(window);
+    // Cargar la fuente una sola vez antes de cualquier bucle y mostrar error solo una vez
+    static sf::Font fontGlobal;
+    static bool fuenteCargada = fontGlobal.loadFromFile("assets/arial.ttf");
+    static bool fuenteErrorMostrado = false;
+    if (!fuenteCargada && !fuenteErrorMostrado) {
+        std::cerr << "Failed to load font \"assets/arial.ttf\"" << std::endl;
+        fuenteErrorMostrado = true;
+    }
+    int naveSeleccionada = seleccionarNave(window, fontGlobal);
     std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
 
     while (window.isOpen()) {
@@ -120,8 +127,9 @@ void Ventana::mostrar() {
         bool fuenteCargada = fontPuntos.loadFromFile("assets/arial.ttf");
         Puntaje puntaje(window.getSize().x);
         Vida vida;
-        int vidas = 3;
-        vida.setVidas(vidas);
+        // Incluir Oportunidad.hpp en el encabezado, no aquí
+        Oportunidad oportunidad(3, 3);
+        vida.setVidas(oportunidad.getVidas());
 
         std::vector<Asteroide> asteroides;
         int cantidadAsteroides = 5;
@@ -181,12 +189,12 @@ void Ventana::mostrar() {
             // --- COLISIONES ASTEROIDE-NAVE ---
             for (auto& ast : asteroides) {
                 if (ast.colisionaConNave(nave)) {
-                    vidas--;
-                    vida.setVidas(vidas);
+                    oportunidad.perderVida();
+                    vida.setVidas(oportunidad.getVidas());
                     ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
                     ast.y = 0;
                     ast.sprite.setPosition(ast.x, ast.y);
-                    if (vidas <= 0) {
+                    if (oportunidad.sinOportunidades()) {
                         gameOver = true;
                         break;
                     }
@@ -273,6 +281,17 @@ void Ventana::mostrar() {
             }
 
             vida.draw(window);
+            // Mostrar oportunidades restantes
+            sf::Font fontOpor;
+            if (fontOpor.loadFromFile("assets/arial.ttf")) {
+                sf::Text textoOpor;
+                textoOpor.setFont(fontOpor);
+                textoOpor.setString("Oportunidades: " + std::to_string(oportunidad.getOportunidades()));
+                textoOpor.setCharacterSize(28);
+                textoOpor.setFillColor(sf::Color::White);
+                textoOpor.setPosition(20, 80);
+                window.draw(textoOpor);
+            }
             puntaje.setPuntos(punto.getPuntos());
             puntaje.draw(window);
 

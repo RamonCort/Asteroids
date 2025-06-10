@@ -1,15 +1,19 @@
 CXX := c++
 EXE := bin/AsteroidsB
+ASTEROIDS_EXE := Asteroids
+ASTEROIDS_SRC := src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp src/Oportunidad.cpp
 
-.PHONY: all clean AsteroidsB runAsteroidsB Nave runNave runAsteroids run
+.PHONY: all clean AsteroidsB runAsteroids Nave runNave runAsteroids run
 
 all: run
 
 run: runAsteroids
 
-runAsteroids: src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp
-	g++ -Iinclude -o runAsteroids src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
-	./runAsteroids
+runAsteroids: $(ASTEROIDS_EXE)
+	./$(ASTEROIDS_EXE)
+
+$(ASTEROIDS_EXE): $(ASTEROIDS_SRC)
+	$(CXX) $(ASTEROIDS_SRC) -o $(ASTEROIDS_EXE) -std=c++17 -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
 AsteroidsB: $(EXE)
 	./$(EXE)

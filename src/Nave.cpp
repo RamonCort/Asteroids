@@ -11,7 +11,7 @@ Nave::Nave(float x, float y, const std::string& ruta) {
     sprite.setScale(2.0f, 2.0f);
     sprite.setOrigin(bounds.width / 2, bounds.height / 2);
     sprite.setPosition(x, y);
-    velocidad = 0.5f; // 10 veces más lento que 5.0f
+    velocidad = 1.0f; // Ahora el doble de rápido que antes (antes 0.5f)
 }
 
 void Nave::mover(const sf::RenderWindow& window) {
