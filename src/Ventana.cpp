@@ -11,6 +11,7 @@
 #include "../include/Vida.hpp"
 #include <vector>
 #include "../include/Asteroide.hpp"
+#include <cmath> // Nueva inclusión para std::sin
 
 // Constructor
 Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Asteroids - Ventana de inicio"), fontLoaded(false) {
@@ -24,31 +25,66 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
 }
 
 void Ventana::mostrarInicio() {
-    sf::Font fontInicio;
-    if (!fontInicio.loadFromFile("assets/arial.ttf")) {
-        // Si no se puede cargar la fuente, usar por defecto
+    // Cargar la imagen de portada
+    sf::Texture portadaTexture;
+    if (!portadaTexture.loadFromFile("assets/images/Portada.jpg")) {
+        std::cerr << "No se pudo cargar la portada.\n";
+        return;
     }
-    sf::Text textoInicio;
-    textoInicio.setFont(fontInicio);
-    textoInicio.setString("Presiona cualquier tecla para empezar con el juego");
-    textoInicio.setCharacterSize(36);
-    textoInicio.setFillColor(sf::Color::White);
-    textoInicio.setStyle(sf::Text::Bold);
-    // Centrar el texto
-    sf::FloatRect bounds = textoInicio.getLocalBounds();
-    textoInicio.setOrigin(bounds.width / 2, bounds.height / 2);
-    textoInicio.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
+    sf::Sprite portadaSprite(portadaTexture);
+    float scaleX = window.getSize().x / portadaSprite.getLocalBounds().width;
+    float scaleY = window.getSize().y / portadaSprite.getLocalBounds().height;
+    portadaSprite.setScale(scaleX, scaleY);
+
+    // Cargar la imagen del título
+    sf::Texture tituloTexture;
+    if (!tituloTexture.loadFromFile("assets/images/Titulo.png")) {
+        std::cerr << "No se pudo cargar la imagen del título: assets/images/Titulo.png\n";
+        // Si falla, simplemente no se muestra el título
+    }
+    sf::Sprite tituloSprite(tituloTexture);
+    // Escalar el título para que sea visible y centrado
+    float tituloScale = std::min(window.getSize().x / tituloSprite.getLocalBounds().width * 0.7f,
+                                 window.getSize().y / tituloSprite.getLocalBounds().height * 0.25f);
+    tituloSprite.setScale(tituloScale, tituloScale);
+    tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
+    tituloSprite.setPosition(window.getSize().x / 2.f, 200);
+
+    // --- Botón visual de PLAY en el menú principal ---
+    sf::Font fontPlay;
+    fontPlay.loadFromFile("assets/arial.ttf");
+    sf::Text playText("PRESIONA ENTER PARA JUGAR", fontPlay, 60);
+    playText.setFillColor(sf::Color(200, 200, 255));
+    playText.setOutlineColor(sf::Color::Black);
+    playText.setOutlineThickness(4.f);
+    sf::FloatRect playBounds = playText.getLocalBounds();
+    playText.setOrigin(playBounds.width / 2, playBounds.height / 2);
+    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
+
+    sf::Clock animClock;
+    float animSpeed = 2.5f;
 
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
-            if (event.type == sf::Event::KeyPressed)
-                return; // Sale al presionar cualquier tecla
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter)
+                return; // Sale al presionar ENTER
         }
-        window.clear(sf::Color::Black);
-        window.draw(textoInicio);
+        // Animación: solo escala del sprite del título, sin cambio de color
+        float t = animClock.getElapsedTime().asSeconds();
+        float scale = 1.0f + 0.08f * std::sin(t * animSpeed);
+        tituloSprite.setScale(tituloScale * scale, tituloScale * scale);
+        tituloSprite.setColor(sf::Color::White); // Sin animación de color
+        // Mantener centrado
+        tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
+        tituloSprite.setPosition(window.getSize().x / 2.f, 200);
+
+        window.clear();
+        window.draw(portadaSprite);
+        window.draw(tituloSprite);
+        window.draw(playText); // Dibuja el botón visual de PLAY
         window.display();
     }
 }

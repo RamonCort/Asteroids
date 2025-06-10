@@ -31,6 +31,9 @@ float Asteroide::Y() const { return y; }
 void Asteroide::dibujar(sf::RenderWindow& window) {
     if (textureCargada) {
         sprite.setPosition(x, y);
+        sprite.rotate(2.0f); // Rota el asteroide cada frame
+        // Sin animación de color
+        sprite.setColor(sf::Color::White);
         window.draw(sprite);
     } else {
         shape.setPosition(x, y);
