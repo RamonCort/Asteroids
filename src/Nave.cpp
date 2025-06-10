@@ -1,9 +1,9 @@
 #include "../include/Nave.hpp"
 #include <iostream>
 
-Nave::Nave(float x, float y) {
-    if (!texture.loadFromFile("assets/images/nave.png")) {
-        std::cerr << "No se pudo cargar la imagen: assets/images/nave.png" << std::endl;
+Nave::Nave(float x, float y, const std::string& ruta) {
+    if (!texture.loadFromFile(ruta)) {
+        std::cerr << "No se pudo cargar la imagen: " << ruta << std::endl;
     }
     sprite.setTexture(texture);
     sf::FloatRect bounds = sprite.getLocalBounds();

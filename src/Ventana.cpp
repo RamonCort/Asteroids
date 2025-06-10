@@ -52,13 +52,64 @@ void Ventana::mostrarInicio() {
     }
 }
 
+// Nueva función para seleccionar nave
+int seleccionarNave(sf::RenderWindow& window) {
+    sf::Texture tex1, tex2;
+    tex1.loadFromFile("assets/images/AstroNave_pixil.png");
+    tex2.loadFromFile("assets/images/nave.png");
+    sf::Sprite nave1(tex1), nave2(tex2);
+    nave1.setScale(2,2); nave2.setScale(2,2);
+    nave1.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f);
+    nave2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
+    int seleccion = 0; // 0 = AstroNave, 1 = nave normal
+    bool elegido = false;
+    sf::Font font;
+    font.loadFromFile("assets/arial.ttf");
+    sf::Text txt("Elige tu nave: ← → ENTER", font, 32);
+    txt.setFillColor(sf::Color::White);
+    txt.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f-100);
+    while(window.isOpen() && !elegido) {
+        sf::Event event;
+        while(window.pollEvent(event)) {
+            if(event.type == sf::Event::Closed) window.close();
+            if(event.type == sf::Event::KeyPressed) {
+                if(event.key.code == sf::Keyboard::Left) seleccion = 0;
+                if(event.key.code == sf::Keyboard::Right) seleccion = 1;
+                if(event.key.code == sf::Keyboard::Enter) elegido = true;
+            }
+        }
+        window.clear(sf::Color::Black);
+        window.draw(txt);
+        if(seleccion==0) nave1.setColor(sf::Color::Yellow), nave2.setColor(sf::Color::White);
+        else nave1.setColor(sf::Color::White), nave2.setColor(sf::Color::Yellow);
+        window.draw(nave1); window.draw(nave2);
+        window.display();
+    }
+    return seleccion;
+}
+
 void Ventana::mostrar() {
+    // --- Fondo ---
+    sf::Texture fondoTexture;
+    if (!fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
+        std::cerr << "No se pudo cargar el fondo: assets/images/Fondo3.png" << std::endl;
+    }
+    sf::Sprite fondoSprite(fondoTexture);
+    // Escalar el fondo para que cubra toda la ventana
+    float scaleX = window.getSize().x / fondoSprite.getLocalBounds().width;
+    float scaleY = window.getSize().y / fondoSprite.getLocalBounds().height;
+    fondoSprite.setScale(scaleX, scaleY);
+
+    // --- Selección de nave ---
+    int naveSeleccionada = seleccionarNave(window);
+    std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
+
     while (window.isOpen()) {
         // --- Bucle de juego principal ---
         // Variables de juego
         float cx = window.getSize().x / 2.f;
         float cy = window.getSize().y / 2.f;
-        Nave nave(cx, cy); // Crea la nave centrada
+        Nave nave(cx, cy, navePath); // Modifica el constructor de Nave para aceptar ruta
 
         std::vector<Misil> misiles;
         bool disparoAnterior = false;
@@ -111,6 +162,7 @@ void Ventana::mostrar() {
                     window.close();
             }
             window.clear(sf::Color::Black);
+            window.draw(fondoSprite); // Dibuja el fondo antes de todo
 
             margen.draw(window);
             nave.mover(window);
