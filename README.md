@@ -6,7 +6,7 @@ Un sencillo juego de Asteroids desarrollado en C++. Inspirado en el clásico arc
 
 *(Puedes agregar una imagen aquí si tienes una)*
 
-## 🛠️ Características
+## 🛠️ Características Principales
 
 - Control de nave espacial mediante teclado
 - Disparo de proyectiles
