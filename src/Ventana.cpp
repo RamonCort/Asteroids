@@ -338,6 +338,29 @@ void Ventana::mostrar() {
                 ast.dibujar(window);
             }
 
+            // --- Agujero Negro central ---
+            static sf::Texture agujeroTexture;
+            static bool agujeroCargado = false;
+            static sf::Sprite agujeroSprite;
+            static float agujeroScale = 0.3f;
+            static float agujeroRot = 0.f;
+            if (!agujeroCargado) {
+                if (agujeroTexture.loadFromFile("assets/images/Agujero_Negro.png")) {
+                    agujeroSprite.setTexture(agujeroTexture);
+                    agujeroSprite.setOrigin(agujeroTexture.getSize().x/2, agujeroTexture.getSize().y/2);
+                    agujeroCargado = true;
+                }
+            }
+            if (agujeroCargado && punto.getPuntos() >= 100) {
+                // El agujero negro se hace más grande progresivamente y rota
+                agujeroScale += 0.0005f;
+                agujeroRot += 1.0f; // velocidad de rotación
+                agujeroSprite.setScale(agujeroScale, agujeroScale);
+                agujeroSprite.setPosition(window.getSize().x/2.f, window.getSize().y/2.f);
+                agujeroSprite.setRotation(agujeroRot);
+                window.draw(agujeroSprite);
+            }
+            // Dibuja la nave después del agujero negro para que quede encima
             nave.draw(window);
 
             if (fontLoaded) {
