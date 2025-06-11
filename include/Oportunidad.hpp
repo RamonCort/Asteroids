@@ -9,6 +9,7 @@ public:
     int getOportunidades() const;
     bool sinOportunidades() const;
     void reiniciar();
+    void sumarVida();
 private:
     int oportunidades;
     int vidas;

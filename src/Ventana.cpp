@@ -9,6 +9,8 @@
 #include "../include/Punto.hpp"
 #include "../include/Puntaje.hpp"
 #include "../include/Vida.hpp"
+#include "../include/VidaExtra.hpp"
+#include "../include/EscudoItem.hpp"
 #include <vector>
 #include "../include/Asteroide.hpp"
 #include <cmath> // Nueva inclusión para std::sin
@@ -124,6 +126,18 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
 }
 
 void Ventana::mostrar() {
+        // --- Variables de límites de ventana ---
+        float limiteX = window.getSize().x;
+        float limiteY = window.getSize().y;
+        // Escudo item (invulnerabilidad)
+        EscudoItem escudoItem(0, 0); // Se inicializa con valores dummy
+        sf::Clock relojEscudoItem;
+        bool escudoItemActivo = false;
+        bool invulnerable = false;
+        sf::Clock relojInvulnerable;
+        float duracionInvulnerable = 5.0f;
+        // Inicializar posición real de escudoItem después de definir limiteX
+        escudoItem.reset(limiteX);
     // --- Fondo ---
     sf::Texture fondoTexture;
     if (!fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
@@ -163,6 +177,9 @@ void Ventana::mostrar() {
         bool fuenteCargada = fontPuntos.loadFromFile("assets/arial.ttf");
         Puntaje puntaje(window.getSize().x);
         Vida vida;
+        int vidas = 3; // Puedes actualizar este valor según la lógica de tu juego
+        vida.setVidas(vidas);
+
         // Incluir Oportunidad.hpp en el encabezado, no aquí
         Oportunidad oportunidad(3, 3);
         vida.setVidas(oportunidad.getVidas());
@@ -173,10 +190,16 @@ void Ventana::mostrar() {
         float limiteY = window.getSize().y;
 
         sf::Clock relojAsteroides;
+        int asteroidesCreados = 0;
         float tiempoEntreAsteroides = 2.5f;
 
         float velocidadAsteroide = 0.6f;
         int ultimoPuntajeVel = 0;
+
+        // Vida extra
+        VidaExtra vidaExtra(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+        sf::Clock relojVidaExtra;
+        bool vidaExtraActiva = false;
 
         for (int i = 0; i < cantidadAsteroides; ++i) {
             float ax = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
@@ -200,6 +223,12 @@ void Ventana::mostrar() {
 
         // --- Bucle principal del juego ---
         while (window.isOpen() && !gameOver) {
+            // Lógica de aparición de escudo cada 25 segundos
+            if (!escudoItemActivo && relojEscudoItem.getElapsedTime().asSeconds() >= 25.0f) {
+                escudoItem.reset(limiteX);
+                escudoItemActivo = true;
+                relojEscudoItem.restart();
+            }
             sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
@@ -224,7 +253,7 @@ void Ventana::mostrar() {
 
             // --- COLISIONES ASTEROIDE-NAVE ---
             for (auto& ast : asteroides) {
-                if (ast.colisionaConNave(nave)) {
+                if (!invulnerable && ast.colisionaConNave(nave)) {
                     oportunidad.perderVida();
                     vida.setVidas(oportunidad.getVidas());
                     ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
@@ -235,6 +264,24 @@ void Ventana::mostrar() {
                         break;
                     }
                 }
+            }
+            // Dibujar y mover escudo item si está activo
+            if (escudoItemActivo) {
+                escudoItem.mover(limiteY, limiteX, 1.0f);
+                escudoItem.dibujar(window);
+                // Colisión con nave
+                if (escudoItem.colision(nave)) {
+                    invulnerable = true;
+                    relojInvulnerable.restart();
+                    escudoItemActivo = false;
+                }
+                if (escudoItem.getY() > limiteY) {
+                    escudoItemActivo = false;
+                }
+            }
+            // Control de duración de invulnerabilidad
+            if (invulnerable && relojInvulnerable.getElapsedTime().asSeconds() >= duracionInvulnerable) {
+                invulnerable = false;
             }
 
             // --- COLISIONES MISIL-ASTEROIDE ---
@@ -353,6 +400,28 @@ void Ventana::mostrar() {
             }
             puntaje.setPuntos(punto.getPuntos());
             puntaje.draw(window);
+
+            // Lógica de aparición de vida extra cada 20 segundos
+            if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 20.0f) {
+                vidaExtra.reset(limiteX);
+                vidaExtraActiva = true;
+                relojVidaExtra.restart();
+            }
+
+            // Dibujar y mover vida extra si está activa
+            if (vidaExtraActiva) {
+                vidaExtra.mover(limiteY, limiteX, 1.0f);
+                vidaExtra.dibujar(window);
+                // Colisión con nave
+                if (vidaExtra.colision(nave)) {
+                    oportunidad.sumarVida(); // Suma solo una vida
+                    vida.setVidas(oportunidad.getVidas());
+                    vidaExtraActiva = false;
+                }
+                if (vidaExtra.getY() > limiteY) {
+                    vidaExtraActiva = false;
+                }
+            }
 
             window.display();
         }

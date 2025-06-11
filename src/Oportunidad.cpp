@@ -1,3 +1,10 @@
+// Agrega el include correcto para el método miembro
+#include "../include/Oportunidad.hpp"
+void Oportunidad::sumarVida() {
+    if (vidas < vidasPorOportunidad) {
+        vidas++;
+    }
+}
 #include "../include/Oportunidad.hpp"
 
 Oportunidad::Oportunidad(int oportunidades, int vidasPorOportunidad)
