@@ -132,9 +132,41 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     sf::Text texto("Ingresa tu nombre:", font, 36);
     texto.setFillColor(sf::Color::White);
     texto.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f - 60);
-    sf::Text textoNombre("", font, 36);
+
+    sf::Font inputFont;
+    if (!inputFont.loadFromFile("assets/fonts/Morally Serif.otf")) {
+        inputFont = font;
+    }
+    // Leyenda centrada y bonita arriba del recuadro
+    sf::Text leyenda("Favor de Escribir tu nombre", inputFont, 32);
+    leyenda.setFillColor(sf::Color::White);
+    sf::FloatRect leyendaBounds = leyenda.getLocalBounds();
+    leyenda.setOrigin(leyendaBounds.left + leyendaBounds.width / 2.0f, leyendaBounds.top + leyendaBounds.height / 2.0f);
+    leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 40);
+
+    sf::Text textoNombre("", inputFont, 36);
     textoNombre.setFillColor(sf::Color::Yellow);
-    textoNombre.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f);
+    textoNombre.setPosition(window.getSize().x / 2.f - 190, window.getSize().y / 2.f + 5);
+
+    sf::RectangleShape inputBox;
+    inputBox.setSize(sf::Vector2f(400, 50));
+    inputBox.setFillColor(sf::Color(255, 255, 255, 60)); // Blanco translúcido
+    inputBox.setOutlineColor(sf::Color::Yellow);
+    inputBox.setOutlineThickness(2);
+    inputBox.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f);
+
+    sf::Clock cursorClock;
+    bool cursorVisible = true;
+
+    // Cargar textura de fondo
+    sf::Texture fondoTexture;
+    fondoTexture.loadFromFile("assets/images/Fondo.png");
+    sf::Sprite fondoSprite(fondoTexture);
+    // Ajustar el fondo al tamaño de la ventana
+    float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
+    float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
+    fondoSprite.setScale(scaleX, scaleY);
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -150,13 +182,24 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
                 }
             }
         }
-        textoNombre.setString(nombre);
+        textoNombre.setString(nombre + "|"); // Muestra el cursor
+
+        // Parpadeo del cursor
+        if (cursorClock.getElapsedTime().asSeconds() >= 0.5f) {
+            cursorVisible = !cursorVisible;
+            cursorClock.restart();
+        }
+        if (!cursorVisible) {
+            textoNombre.setString(nombre); // Oculta el cursor
+        }
+
         window.clear(sf::Color::Black);
-        window.draw(texto);
+        window.draw(fondoSprite); // Dibuja el fondo
+        window.draw(leyenda);
+        window.draw(inputBox); // Dibuja el recuadro antes del texto
         window.draw(textoNombre);
         window.display();
     }
-    return nombre;
 }
 
 void Ventana::mostrar() {
@@ -256,6 +299,15 @@ void Ventana::mostrar() {
             }
             musicaIniciada = true;
         }
+
+        // --- Variables estáticas del fondo y agujero negro para todo el método
+        static sf::Texture agujeroTexture;
+        static bool agujeroCargado = false;
+        static sf::Sprite agujeroSprite;
+        static float agujeroScale = 0.3f;
+        static float agujeroRot = 0.f;
+        static bool agujeroVisible = true;
+        static bool fondoCambiado = false;
 
         // --- Bucle principal del juego ---
         while (window.isOpen() && !gameOver) {
@@ -375,13 +427,6 @@ void Ventana::mostrar() {
             }
 
             // --- Agujero Negro central ---
-            static sf::Texture agujeroTexture;
-            static bool agujeroCargado = false;
-            static sf::Sprite agujeroSprite;
-            static float agujeroScale = 0.3f;
-            static float agujeroRot = 0.f;
-            static bool agujeroVisible = true;
-            static bool fondoCambiado = false;
             if (!agujeroCargado) {
                 if (agujeroTexture.loadFromFile("assets/images/Agujero_Negro.png")) {
                     agujeroSprite.setTexture(agujeroTexture);
@@ -389,18 +434,21 @@ void Ventana::mostrar() {
                     agujeroCargado = true;
                 }
             }
-            // Cambiar fondo si la nave colisiona con el agujero negro y puntaje >= 100
+            // El agujero negro aparece a los 100 puntos
             if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
-                // Actualizar posición y escala del agujero
                 agujeroScale += 0.0005f;
                 agujeroRot += 1.0f;
                 agujeroSprite.setScale(agujeroScale, agujeroScale);
                 agujeroSprite.setPosition(window.getSize().x/2.f, window.getSize().y/2.f);
                 agujeroSprite.setRotation(agujeroRot);
-                // Detectar colisión nave-agujero
-                if (nave.getSprite().getGlobalBounds().intersects(agujeroSprite.getGlobalBounds())) {
+                window.draw(agujeroSprite);
+                // Detectar colisión SOLO con el centro del agujero
+                sf::Vector2f naveCentro = nave.getSprite().getPosition();
+                sf::Vector2f agujeroCentro = agujeroSprite.getPosition();
+                float distancia = std::sqrt(std::pow(naveCentro.x - agujeroCentro.x, 2) + std::pow(naveCentro.y - agujeroCentro.y, 2));
+                float radioColision = agujeroSprite.getGlobalBounds().width * 0.15f; // Solo el centro
+                if (distancia < radioColision) {
                     if (!fondoCambiado) {
-                        // Cambiar fondo
                         if (fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
                             fondoSprite.setTexture(fondoTexture);
                             float scaleX = window.getSize().x / fondoSprite.getLocalBounds().width;
@@ -412,10 +460,77 @@ void Ventana::mostrar() {
                     }
                 }
             }
-            // Dibujar agujero solo si está visible
+            // --- EFECTO DE ATRACCIÓN DEL AGUJERO NEGRO ---
             if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
-                window.draw(agujeroSprite);
+                sf::Vector2f agujeroCentro = agujeroSprite.getPosition();
+                float escalaAgujero = agujeroScale; // Entre 0.3 y lo que crezca
+                float factorFuerza = std::max(1.0f, escalaAgujero * 2.5f); // Aumenta con el tamaño
+                // Atracción para asteroides
+                for (auto it = asteroides.begin(); it != asteroides.end(); ) {
+                    sf::Vector2f astPos = it->sprite.getPosition();
+                    sf::Vector2f dir = agujeroCentro - astPos;
+                    float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+                    if (dist > 1.f) {
+                        dir /= dist; // Normaliza
+                        float fuerza = 0.15f * std::min(300.f, dist) / 300.f * factorFuerza;
+                        it->sprite.move(dir * fuerza);
+                        it->x = it->sprite.getPosition().x;
+                        it->y = it->sprite.getPosition().y;
+                    }
+                    // Eliminar si colisiona con el centro
+                    float radioColision = agujeroSprite.getGlobalBounds().width * 0.15f;
+                    if (dist < radioColision) {
+                        it = asteroides.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+                // Atracción para la nave
+                sf::Vector2f navePos = nave.getSprite().getPosition();
+                sf::Vector2f dirNave = agujeroCentro - navePos;
+                float distNave = std::sqrt(dirNave.x * dirNave.x + dirNave.y * dirNave.y);
+                if (distNave > 1.f) {
+                    dirNave /= distNave;
+                    float fuerzaNave = 0.10f * std::min(300.f, distNave) / 300.f * factorFuerza;
+                    nave.getSprite().move(dirNave * fuerzaNave);
+                }
+                // Si la nave colisiona con el centro, puedes poner gameOver o efecto
+                float radioColisionNave = agujeroSprite.getGlobalBounds().width * 0.15f;
+                if (distNave < radioColisionNave) {
+                    // Por ahora, solo la atrae, pero puedes poner lógica de game over aquí si quieres
+                }
+                // Atracción para el escudo
+                if (escudoItemActivo) {
+                    sf::Vector2f escudoPos(escudoItem.getX(), escudoItem.getY());
+                    sf::Vector2f dirEscudo = agujeroCentro - escudoPos;
+                    float distEscudo = std::sqrt(dirEscudo.x * dirEscudo.x + dirEscudo.y * dirEscudo.y);
+                    if (distEscudo > 1.f) {
+                        dirEscudo /= distEscudo;
+                        float fuerzaEscudo = 0.12f * std::min(300.f, distEscudo) / 300.f * factorFuerza;
+                        escudoItem.setPos(escudoPos.x + dirEscudo.x * fuerzaEscudo, escudoPos.y + dirEscudo.y * fuerzaEscudo);
+                    }
+                    float radioColisionEscudo = agujeroSprite.getGlobalBounds().width * 0.15f;
+                    if (distEscudo < radioColisionEscudo) {
+                        escudoItemActivo = false;
+                    }
+                }
+                // Atracción para la vida extra
+                if (vidaExtraActiva) {
+                    sf::Vector2f vidaPos(vidaExtra.getX(), vidaExtra.getY());
+                    sf::Vector2f dirVida = agujeroCentro - vidaPos;
+                    float distVida = std::sqrt(dirVida.x * dirVida.x + dirVida.y * dirVida.y);
+                    if (distVida > 1.f) {
+                        dirVida /= distVida;
+                        float fuerzaVida = 0.12f * std::min(300.f, distVida) / 300.f * factorFuerza;
+                        vidaExtra.setPos(vidaPos.x + dirVida.x * fuerzaVida, vidaPos.y + dirVida.y * fuerzaVida);
+                    }
+                    float radioColisionVida = agujeroSprite.getGlobalBounds().width * 0.15f;
+                    if (distVida < radioColisionVida) {
+                        vidaExtraActiva = false;
+                    }
+                }
             }
+
             // Dibuja la nave después del agujero negro para que quede encima
             nave.draw(window);
 
@@ -547,7 +662,17 @@ void Ventana::mostrar() {
         // Si la ventana se cerró, salimos del bucle
         break;
 reiniciar_juego:
-        // El bucle while(window.isOpen()) se repite y reinicia el juego
+        // Reiniciar variables estáticas de fondo y agujero negro
+        if (fondoTexture.loadFromFile("assets/images/Fondo2.png")) {
+            fondoSprite.setTexture(fondoTexture);
+            float scaleX = window.getSize().x / fondoSprite.getLocalBounds().width;
+            float scaleY = window.getSize().y / fondoSprite.getLocalBounds().height;
+            fondoSprite.setScale(scaleX, scaleY);
+        }
+        fondoCambiado = false;
+        agujeroVisible = true;
+        agujeroScale = 0.3f;
+        agujeroRot = 0.f;
         continue;
     }
 }

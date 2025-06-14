@@ -10,6 +10,10 @@ public:
     bool colision(Nave& nave);
     void reset(float limiteX);
     float getY() const;
+    float getX() const { return x; }
+    void setX(float nx) { x = nx; shape.setPosition(x, y); }
+    void setY(float ny) { y = ny; shape.setPosition(x, y); }
+    void setPos(float nx, float ny) { x = nx; y = ny; shape.setPosition(x, y); }
 private:
     float x, y;
     sf::CircleShape shape;
