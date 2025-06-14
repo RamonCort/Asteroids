@@ -1,7 +1,7 @@
 CXX := c++
 EXE := bin/AsteroidsB
 ASTEROIDS_EXE := Asteroids
-ASTEROIDS_SRC := src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp src/Oportunidad.cpp src/VidaExtra.cpp src/EscudoItem.cpp
+ASTEROIDS_SRC := src/Asteroids.cpp src/Ventana.cpp src/Nave.cpp src/Misil.cpp src/Margen.cpp src/Punto.cpp src/Puntaje.cpp src/Vida.cpp src/Asteroide.cpp src/Oportunidad.cpp src/VidaExtra.cpp src/EscudoItem.cpp src/TablaDePuntaje.cpp
 
 .PHONY: all clean AsteroidsB runAsteroids Nave runNave runAsteroids run
 

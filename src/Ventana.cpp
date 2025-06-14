@@ -14,6 +14,7 @@
 #include <vector>
 #include "../include/Asteroide.hpp"
 #include <cmath> // Nueva inclusión para std::sin
+#include "../include/TablaDePuntaje.hpp"
 
 // Constructor
 Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Asteroids - Ventana de inicio"), fontLoaded(false) {
@@ -125,6 +126,39 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     return seleccion;
 }
 
+// Nueva función para pedir el nombre al usuario
+std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
+    std::string nombre;
+    sf::Text texto("Ingresa tu nombre:", font, 36);
+    texto.setFillColor(sf::Color::White);
+    texto.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f - 60);
+    sf::Text textoNombre("", font, 36);
+    textoNombre.setFillColor(sf::Color::Yellow);
+    textoNombre.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f);
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+            if (event.type == sf::Event::TextEntered) {
+                if (event.text.unicode == '\b') { // Backspace
+                    if (!nombre.empty()) nombre.pop_back();
+                } else if (event.text.unicode == '\r' || event.text.unicode == '\n') { // Enter
+                    if (!nombre.empty()) return nombre;
+                } else if (nombre.size() < 12 && event.text.unicode < 128 && event.text.unicode >= 32) {
+                    nombre += static_cast<char>(event.text.unicode);
+                }
+            }
+        }
+        textoNombre.setString(nombre);
+        window.clear(sf::Color::Black);
+        window.draw(texto);
+        window.draw(textoNombre);
+        window.display();
+    }
+    return nombre;
+}
+
 void Ventana::mostrar() {
         // --- Variables de límites de ventana ---
         float limiteX = window.getSize().x;
@@ -140,8 +174,8 @@ void Ventana::mostrar() {
         escudoItem.reset(limiteX);
     // --- Fondo ---
     sf::Texture fondoTexture;
-    if (!fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
-        std::cerr << "No se pudo cargar el fondo: assets/images/Fondo3.png" << std::endl;
+    if (!fondoTexture.loadFromFile("assets/images/Fondo2.png")) {
+        std::cerr << "No se pudo cargar el fondo: assets/images/Fondo2.png" << std::endl;
     }
     sf::Sprite fondoSprite(fondoTexture);
     // Escalar el fondo para que cubra toda la ventana
@@ -158,6 +192,8 @@ void Ventana::mostrar() {
         std::cerr << "Failed to load font \"assets/arial.ttf\"" << std::endl;
         fuenteErrorMostrado = true;
     }
+    // Pedir nombre antes de elegir nave
+    std::string nombreJugador = pedirNombre(window, fontGlobal);
     int naveSeleccionada = seleccionarNave(window, fontGlobal);
     std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
 
@@ -344,6 +380,8 @@ void Ventana::mostrar() {
             static sf::Sprite agujeroSprite;
             static float agujeroScale = 0.3f;
             static float agujeroRot = 0.f;
+            static bool agujeroVisible = true;
+            static bool fondoCambiado = false;
             if (!agujeroCargado) {
                 if (agujeroTexture.loadFromFile("assets/images/Agujero_Negro.png")) {
                     agujeroSprite.setTexture(agujeroTexture);
@@ -351,13 +389,31 @@ void Ventana::mostrar() {
                     agujeroCargado = true;
                 }
             }
-            if (agujeroCargado && punto.getPuntos() >= 100) {
-                // El agujero negro se hace más grande progresivamente y rota
+            // Cambiar fondo si la nave colisiona con el agujero negro y puntaje >= 100
+            if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
+                // Actualizar posición y escala del agujero
                 agujeroScale += 0.0005f;
-                agujeroRot += 1.0f; // velocidad de rotación
+                agujeroRot += 1.0f;
                 agujeroSprite.setScale(agujeroScale, agujeroScale);
                 agujeroSprite.setPosition(window.getSize().x/2.f, window.getSize().y/2.f);
                 agujeroSprite.setRotation(agujeroRot);
+                // Detectar colisión nave-agujero
+                if (nave.getSprite().getGlobalBounds().intersects(agujeroSprite.getGlobalBounds())) {
+                    if (!fondoCambiado) {
+                        // Cambiar fondo
+                        if (fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
+                            fondoSprite.setTexture(fondoTexture);
+                            float scaleX = window.getSize().x / fondoSprite.getLocalBounds().width;
+                            float scaleY = window.getSize().y / fondoSprite.getLocalBounds().height;
+                            fondoSprite.setScale(scaleX, scaleY);
+                        }
+                        fondoCambiado = true;
+                        agujeroVisible = false;
+                    }
+                }
+            }
+            // Dibujar agujero solo si está visible
+            if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
                 window.draw(agujeroSprite);
             }
             // Dibuja la nave después del agujero negro para que quede encima
@@ -376,14 +432,28 @@ void Ventana::mostrar() {
             pAnterior = pActual;
 
             // Mostrar puntos en pantalla solo si la fuente se cargó correctamente
-            if (fuenteCargada) {
+            sf::Font fontMorallySerif;
+            if (fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf")) {
                 sf::Text textoPuntos;
-                textoPuntos.setFont(fontPuntos);
+                textoPuntos.setFont(fontMorallySerif);
                 textoPuntos.setString("Puntos: " + std::to_string(punto.getPuntos()));
-                textoPuntos.setCharacterSize(32);
+                textoPuntos.setCharacterSize(36);
                 textoPuntos.setFillColor(sf::Color::White);
-                textoPuntos.setPosition(20, 20);
+                // Posicionar en la esquina superior derecha
+                float textWidth = textoPuntos.getLocalBounds().width;
+                textoPuntos.setPosition(window.getSize().x - textWidth - 40, 20);
                 window.draw(textoPuntos);
+            } else {
+                // Si falla la fuente, mostrar con Arial como respaldo
+                if (fuenteCargada) {
+                    sf::Text textoPuntos;
+                    textoPuntos.setFont(fontPuntos);
+                    textoPuntos.setString("Puntos: " + std::to_string(punto.getPuntos()));
+                    textoPuntos.setCharacterSize(32);
+                    textoPuntos.setFillColor(sf::Color::White);
+                    textoPuntos.setPosition(20, 20);
+                    window.draw(textoPuntos);
+                }
             }
 
             vida.draw(window);
@@ -428,6 +498,26 @@ void Ventana::mostrar() {
 
         // --- Mostrar pantalla de Game Over ---
         if (window.isOpen()) {
+            // Guardar puntaje
+            TablaDePuntaje tabla("mejores_puntajes.txt");
+            std::string nombre = nombreJugador.empty() ? "JUGADOR" : nombreJugador;
+            tabla.agregar(nombre, punto.getPuntos());
+
+            // Mostrar tabla de mejores puntajes
+            sf::Font fontTabla;
+            fontTabla.loadFromFile("assets/fonts/Morally Serif.otf");
+            std::string tablaStr = "MEJORES PUNTAJES\n";
+            int pos = 1;
+            for (const auto& entrada : tabla.obtener()) {
+                tablaStr += std::to_string(pos++) + ". " + entrada.nombre + ": " + std::to_string(entrada.puntaje) + "\n";
+            }
+            sf::Text textoTabla(tablaStr, fontTabla, 36);
+            textoTabla.setFillColor(sf::Color::White);
+            textoTabla.setStyle(sf::Text::Bold);
+            sf::FloatRect bounds = textoTabla.getLocalBounds();
+            textoTabla.setOrigin(bounds.width / 2, bounds.height / 2);
+            textoTabla.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f + 120);
+
             sf::Font fontFin;
             fontFin.loadFromFile("assets/arial.ttf");
             sf::Text textoFin;
@@ -436,8 +526,8 @@ void Ventana::mostrar() {
             textoFin.setCharacterSize(40);
             textoFin.setFillColor(sf::Color::White);
             textoFin.setStyle(sf::Text::Bold);
-            sf::FloatRect bounds = textoFin.getLocalBounds();
-            textoFin.setOrigin(bounds.width / 2, bounds.height / 2);
+            sf::FloatRect boundsFin = textoFin.getLocalBounds();
+            textoFin.setOrigin(boundsFin.width / 2, boundsFin.height / 2);
             textoFin.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
 
             while (window.isOpen()) {
@@ -450,6 +540,7 @@ void Ventana::mostrar() {
                 }
                 window.clear(sf::Color::Black);
                 window.draw(textoFin);
+                window.draw(textoTabla);
                 window.display();
             }
         }

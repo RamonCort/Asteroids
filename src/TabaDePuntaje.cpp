@@ -1,3 +1,0 @@
-#include "../include/TabaDePuntaje.hpp"
-
-// ...implementación futura...
