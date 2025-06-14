@@ -7,13 +7,18 @@ Puntaje::Puntaje(float windowWidth) : width(200), height(60) {
     box.setOutlineThickness(3);
     box.setPosition(windowWidth - width - 20, 20);
 
-    if (font.loadFromFile("assets/arial.ttf")) {
-        texto.setFont(font);
-    }
-    texto.setCharacterSize(28);
-    texto.setFillColor(sf::Color::White);
-    texto.setPosition(windowWidth - width - 10, 30);
+    // Cargar fuente Arial desde assets/arial.ttf
+    font.loadFromFile("assets/arial.ttf");
+    texto.setFont(font);
     texto.setString("Puntaje : 0");
+    texto.setCharacterSize(32); // Más grande y legible
+    texto.setFillColor(sf::Color::White);
+    texto.setOutlineColor(sf::Color::Black);
+    texto.setOutlineThickness(3.f);
+    // Centrado vertical respecto al box
+    sf::FloatRect textBounds = texto.getLocalBounds();
+    texto.setOrigin(textBounds.left, textBounds.top);
+    texto.setPosition(box.getPosition().x + 20, box.getPosition().y + (box.getSize().y - textBounds.height) / 2 - 5);
 }
 
 void Puntaje::setPuntos(int puntos) {
