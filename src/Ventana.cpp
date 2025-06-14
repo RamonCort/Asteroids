@@ -16,6 +16,9 @@
 #include <cmath> // Nueva inclusión para std::sin
 #include "../include/TablaDePuntaje.hpp"
 
+// Prototipo de la función de selección de armamento
+int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font);
+
 // Constructor
 Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Asteroids - Ventana de inicio"), fontLoaded(false) {
     if (!texture.loadFromFile("assets/images/nave.png")) {
@@ -103,9 +106,31 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     nave2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
     int seleccion = 0; // 0 = AstroNave, 1 = nave normal
     bool elegido = false;
-    sf::Text txt("Elige tu nave: ← → ENTER", font, 32);
-    txt.setFillColor(sf::Color::White);
-    txt.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f-100);
+    sf::Text txt("Elige tu nave: ← → ENTER", font, 48);
+    txt.setFillColor(sf::Color::Yellow);
+    txt.setOutlineColor(sf::Color::Black);
+    txt.setOutlineThickness(3.f);
+    sf::FloatRect txtBounds = txt.getLocalBounds();
+    txt.setOrigin(txtBounds.width / 2, txtBounds.height / 2);
+    txt.setPosition(window.getSize().x/2.f, window.getSize().y/2.f-180);
+
+    // Fondo translúcido y recuadro para el menú
+    sf::RectangleShape inputBox;
+    inputBox.setSize(sf::Vector2f(500, 70));
+    inputBox.setFillColor(sf::Color(255, 255, 255, 80)); // Blanco translúcido
+    inputBox.setOutlineColor(sf::Color::Yellow);
+    inputBox.setOutlineThickness(3);
+    inputBox.setPosition(window.getSize().x / 2.f - 250, window.getSize().y / 2.f - 200);
+
+    sf::Text leyenda("\"Selecciona tu nave\"", font, 54);
+    leyenda.setFillColor(sf::Color::Yellow);
+    leyenda.setOutlineColor(sf::Color::Black);
+    leyenda.setOutlineThickness(5.f);
+    leyenda.setStyle(sf::Text::Bold | sf::Text::Italic);
+    sf::FloatRect leyendaBounds = leyenda.getLocalBounds();
+    leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
+    leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 165);
+
     while(window.isOpen() && !elegido) {
         sf::Event event;
         while(window.pollEvent(event)) {
@@ -117,6 +142,8 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
             }
         }
         window.clear(sf::Color::Black);
+        window.draw(inputBox);
+        window.draw(leyenda);
         window.draw(txt);
         if(seleccion==0) nave1.setColor(sf::Color::Yellow), nave2.setColor(sf::Color::White);
         else nave1.setColor(sf::Color::White), nave2.setColor(sf::Color::Yellow);
@@ -129,19 +156,27 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
 // Nueva función para pedir el nombre al usuario
 std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     std::string nombre;
-    sf::Text texto("Ingresa tu nombre:", font, 36);
-    texto.setFillColor(sf::Color::White);
-    texto.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f - 60);
+    sf::Text texto("Ingresa tu nombre:", font, 48);
+    texto.setFillColor(sf::Color::Yellow);
+    texto.setOutlineColor(sf::Color::Black);
+    texto.setOutlineThickness(4.f);
+    texto.setStyle(sf::Text::Bold);
+    texto.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 100);
+    sf::FloatRect textoBounds = texto.getLocalBounds();
+    texto.setOrigin(textoBounds.width / 2, textoBounds.height / 2);
 
     sf::Font inputFont;
     if (!inputFont.loadFromFile("assets/fonts/Morally Serif.otf")) {
         inputFont = font;
     }
     // Leyenda centrada y bonita arriba del recuadro
-    sf::Text leyenda("Favor de Escribir tu nombre", inputFont, 32);
-    leyenda.setFillColor(sf::Color::White);
+    sf::Text leyenda("Favor de Escribir tu nombre", inputFont, 36);
+    leyenda.setFillColor(sf::Color::Yellow);
+    leyenda.setOutlineColor(sf::Color::Black);
+    leyenda.setOutlineThickness(3.f);
+    leyenda.setStyle(sf::Text::Bold | sf::Text::Italic);
     sf::FloatRect leyendaBounds = leyenda.getLocalBounds();
-    leyenda.setOrigin(leyendaBounds.left + leyendaBounds.width / 2.0f, leyendaBounds.top + leyendaBounds.height / 2.0f);
+    leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
     leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 40);
 
     sf::Text textoNombre("", inputFont, 36);
@@ -166,6 +201,16 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
     float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
     fondoSprite.setScale(scaleX, scaleY);
+
+    // Texto grande tipo pantalla de inicio
+    sf::Text tituloNombre("ESCRIBE TU NOMBRE", font, 72);
+    tituloNombre.setFillColor(sf::Color(200, 200, 255));
+    tituloNombre.setOutlineColor(sf::Color::Black);
+    tituloNombre.setOutlineThickness(8.f);
+    tituloNombre.setStyle(sf::Text::Bold);
+    sf::FloatRect tituloBounds = tituloNombre.getLocalBounds();
+    tituloNombre.setOrigin(tituloBounds.width / 2, tituloBounds.height / 2);
+    tituloNombre.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 180);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -195,6 +240,7 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
 
         window.clear(sf::Color::Black);
         window.draw(fondoSprite); // Dibuja el fondo
+        window.draw(tituloNombre); // Dibuja el texto grande
         window.draw(leyenda);
         window.draw(inputBox); // Dibuja el recuadro antes del texto
         window.draw(textoNombre);
@@ -237,7 +283,10 @@ void Ventana::mostrar() {
     }
     // Pedir nombre antes de elegir nave
     std::string nombreJugador = pedirNombre(window, fontGlobal);
+    // Menú de nave con título
     int naveSeleccionada = seleccionarNave(window, fontGlobal);
+    // Menú de armamento
+    int armamentoSeleccionado = seleccionarArmamento(window, fontGlobal);
     std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
 
     while (window.isOpen()) {
@@ -310,6 +359,19 @@ void Ventana::mostrar() {
         static bool fondoCambiado = false;
 
         // --- Bucle principal del juego ---
+        // --- Sonido de disparo ---
+        sf::SoundBuffer bufferLaser;
+        bufferLaser.loadFromFile("assets/music/Laser2.ogg");
+        sf::Sound sonidoLaser;
+        sonidoLaser.setBuffer(bufferLaser);
+
+        // --- Variables para el láser ---
+        sf::Clock relojLaser;
+        sf::Clock relojRecargaLaser;
+        bool laserActivo = false;
+        float duracionLaser = 1.0f;
+        float recargaLaser = 2.0f;
+
         while (window.isOpen() && !gameOver) {
             // Lógica de aparición de escudo cada 25 segundos
             if (!escudoItemActivo && relojEscudoItem.getElapsedTime().asSeconds() >= 25.0f) {
@@ -329,13 +391,47 @@ void Ventana::mostrar() {
             nave.mover(window);
             margen.limitar(nave);
 
-            // Disparo de misil al presionar espacio (solo una vez por pulsación)
+            // Disparo de misil o láser
             bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
-            if (disparoActual && !disparoAnterior) {
-                sf::Vector2f navePos = nave.getSprite().getPosition();
-                float misilX = navePos.x;
-                float misilY = navePos.y - nave.getSprite().getGlobalBounds().height / 2;
-                misiles.emplace_back(misilX, misilY);
+            if (armamentoSeleccionado == 0) { // Misil
+                if (disparoActual && !disparoAnterior) {
+                    sf::Vector2f navePos = nave.getSprite().getPosition();
+                    float misilX = navePos.x;
+                    float misilY = navePos.y - nave.getSprite().getGlobalBounds().height / 2;
+                    misiles.emplace_back(misilX, misilY);
+                    sonidoLaser.play();
+                }
+            } else { // Láser
+                if (!laserActivo && disparoActual && relojRecargaLaser.getElapsedTime().asSeconds() >= recargaLaser) {
+                    laserActivo = true;
+                    relojLaser.restart();
+                    sonidoLaser.play();
+                }
+                if (laserActivo) {
+                    sf::Vector2f navePos = nave.getSprite().getPosition();
+                    sf::VertexArray laser(sf::Lines, 2);
+                    laser[0].position = sf::Vector2f(navePos.x, navePos.y - nave.getSprite().getGlobalBounds().height / 2);
+                    laser[0].color = sf::Color::Cyan;
+                    laser[1].position = sf::Vector2f(navePos.x, 0);
+                    laser[1].color = sf::Color::Cyan;
+                    window.draw(laser);
+                    // Colisión del láser con asteroides
+                    for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
+                        sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
+                        float xLaser = navePos.x;
+                        if (xLaser >= bounds.left && xLaser <= bounds.left + bounds.width) {
+                            itAst = asteroides.erase(itAst);
+                            punto.sumar(10);
+                        } else {
+                            ++itAst;
+                        }
+                    }
+                    if (relojLaser.getElapsedTime().asSeconds() >= duracionLaser || !disparoActual) {
+                        laserActivo = false;
+                        relojRecargaLaser.restart();
+                        sonidoLaser.stop();
+                    }
+                }
             }
             disparoAnterior = disparoActual;
 
@@ -449,11 +545,14 @@ void Ventana::mostrar() {
                 float radioColision = agujeroSprite.getGlobalBounds().width * 0.15f; // Solo el centro
                 if (distancia < radioColision) {
                     if (!fondoCambiado) {
-                        if (fondoTexture.loadFromFile("assets/images/Fondo3.png")) {
+                        if (fondoTexture.loadFromFile("assets/images/Portada.jpg")) {
                             fondoSprite.setTexture(fondoTexture);
                             float scaleX = window.getSize().x / fondoSprite.getLocalBounds().width;
                             float scaleY = window.getSize().y / fondoSprite.getLocalBounds().height;
-                            fondoSprite.setScale(scaleX, scaleY);
+                            float scale = std::max(scaleX, scaleY); // Escalado tipo 'cover'
+                            fondoSprite.setScale(scale, scale);
+                            fondoSprite.setOrigin(fondoSprite.getLocalBounds().width / 2, fondoSprite.getLocalBounds().height / 2);
+                            fondoSprite.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
                         }
                         fondoCambiado = true;
                         agujeroVisible = false;
@@ -675,4 +774,35 @@ reiniciar_juego:
         agujeroRot = 0.f;
         continue;
     }
+}
+
+// Prototipo de la función de selección de armamento
+int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
+    int seleccion = 0; // 0 = Misil, 1 = Láser
+    bool elegido = false;
+    sf::Text titulo("Elige tu Armamento", font, 40);
+    titulo.setFillColor(sf::Color::White);
+    titulo.setPosition(window.getSize().x/2.f-180, window.getSize().y/2.f-120);
+    sf::Text opcion1("Misil", font, 36);
+    sf::Text opcion2("Láser", font, 36);
+    opcion1.setPosition(window.getSize().x/2.f-100, window.getSize().y/2.f-30);
+    opcion2.setPosition(window.getSize().x/2.f-100, window.getSize().y/2.f+30);
+    while(window.isOpen() && !elegido) {
+        sf::Event event;
+        while(window.pollEvent(event)) {
+            if(event.type == sf::Event::Closed) window.close();
+            if(event.type == sf::Event::KeyPressed) {
+                if(event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down) seleccion = 1-seleccion;
+                if(event.key.code == sf::Keyboard::Enter) elegido = true;
+            }
+        }
+        opcion1.setFillColor(seleccion==0 ? sf::Color::Yellow : sf::Color::White);
+        opcion2.setFillColor(seleccion==1 ? sf::Color::Yellow : sf::Color::White);
+        window.clear(sf::Color::Black);
+        window.draw(titulo);
+        window.draw(opcion1);
+        window.draw(opcion2);
+        window.display();
+    }
+    return seleccion;
 }
