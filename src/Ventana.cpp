@@ -114,22 +114,17 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     txt.setOrigin(txtBounds.width / 2, txtBounds.height / 2);
     txt.setPosition(window.getSize().x/2.f, window.getSize().y/2.f-180);
 
-    // Fondo translúcido y recuadro para el menú
-    sf::RectangleShape inputBox;
-    inputBox.setSize(sf::Vector2f(500, 70));
-    inputBox.setFillColor(sf::Color(255, 255, 255, 80)); // Blanco translúcido
-    inputBox.setOutlineColor(sf::Color::Yellow);
-    inputBox.setOutlineThickness(3);
-    inputBox.setPosition(window.getSize().x / 2.f - 250, window.getSize().y / 2.f - 200);
-
-    sf::Text leyenda("\"Selecciona tu nave\"", font, 54);
-    leyenda.setFillColor(sf::Color::Yellow);
+    // Cargar fuente Morally Serif para la leyenda
+    sf::Font fontMorallySerif;
+    fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf");
+    sf::Text leyenda("Favor de seleccionar su nave", fontMorallySerif, 44);
+    leyenda.setFillColor(sf::Color(80, 160, 255)); // Azul
     leyenda.setOutlineColor(sf::Color::Black);
-    leyenda.setOutlineThickness(5.f);
-    leyenda.setStyle(sf::Text::Bold | sf::Text::Italic);
+    leyenda.setOutlineThickness(4.f);
+    leyenda.setStyle(sf::Text::Bold);
     sf::FloatRect leyendaBounds = leyenda.getLocalBounds();
     leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
-    leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 165);
+    leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220);
 
     while(window.isOpen() && !elegido) {
         sf::Event event;
@@ -142,7 +137,6 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
             }
         }
         window.clear(sf::Color::Black);
-        window.draw(inputBox);
         window.draw(leyenda);
         window.draw(txt);
         if(seleccion==0) nave1.setColor(sf::Color::Yellow), nave2.setColor(sf::Color::White);
@@ -778,30 +772,45 @@ reiniciar_juego:
 
 // Prototipo de la función de selección de armamento
 int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
-    int seleccion = 0; // 0 = Misil, 1 = Láser
+    // Cargar fuente Morally Serif para la leyenda
+    sf::Font fontMorallySerif;
+    fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf");
+    sf::Text leyenda("Favor de seleccionar su armamento", fontMorallySerif, 44);
+    leyenda.setFillColor(sf::Color(80, 160, 255)); // Azul
+    leyenda.setOutlineColor(sf::Color::Black);
+    leyenda.setOutlineThickness(4.f);
+    leyenda.setStyle(sf::Text::Bold);
+    sf::FloatRect leyendaBounds = leyenda.getLocalBounds();
+    leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
+    leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220);
+
+    // Cargar imágenes de misiles
+    sf::Texture texMisil, texLaser;
+    texMisil.loadFromFile("assets/images/Disparo.png");
+    texLaser.loadFromFile("assets/images/Disparo.png"); // Usa la misma imagen, puedes cambiarla si tienes otra
+    sf::Sprite misil1(texMisil), misil2(texLaser);
+    misil1.setScale(3, 3);
+    misil2.setScale(3, 3);
+    misil1.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f);
+    misil2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
+
+    int seleccion = 0; // 0 = Misil, 1 = Laser
     bool elegido = false;
-    sf::Text titulo("Elige tu Armamento", font, 40);
-    titulo.setFillColor(sf::Color::White);
-    titulo.setPosition(window.getSize().x/2.f-180, window.getSize().y/2.f-120);
-    sf::Text opcion1("Misil", font, 36);
-    sf::Text opcion2("Láser", font, 36);
-    opcion1.setPosition(window.getSize().x/2.f-100, window.getSize().y/2.f-30);
-    opcion2.setPosition(window.getSize().x/2.f-100, window.getSize().y/2.f+30);
     while(window.isOpen() && !elegido) {
         sf::Event event;
         while(window.pollEvent(event)) {
             if(event.type == sf::Event::Closed) window.close();
             if(event.type == sf::Event::KeyPressed) {
-                if(event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down) seleccion = 1-seleccion;
+                if(event.key.code == sf::Keyboard::Left) seleccion = 0;
+                if(event.key.code == sf::Keyboard::Right) seleccion = 1;
                 if(event.key.code == sf::Keyboard::Enter) elegido = true;
             }
         }
-        opcion1.setFillColor(seleccion==0 ? sf::Color::Yellow : sf::Color::White);
-        opcion2.setFillColor(seleccion==1 ? sf::Color::Yellow : sf::Color::White);
+        misil1.setColor(seleccion==0 ? sf::Color::Green : sf::Color::White);
+        misil2.setColor(seleccion==1 ? sf::Color::Green : sf::Color::White);
         window.clear(sf::Color::Black);
-        window.draw(titulo);
-        window.draw(opcion1);
-        window.draw(opcion2);
+        window.draw(leyenda);
+        window.draw(misil1); window.draw(misil2);
         window.display();
     }
     return seleccion;

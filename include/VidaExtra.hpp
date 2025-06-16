@@ -17,4 +17,6 @@ public:
 private:
     float x, y;
     sf::CircleShape shape;
+    sf::Texture corazonTexture;
+    sf::Sprite corazonSprite;
 };
