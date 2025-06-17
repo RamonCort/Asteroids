@@ -4,10 +4,10 @@
 class Misil {
 public:
     Misil(float x, float y);
-    void mover();
-    void draw(sf::RenderWindow& window);
-    bool fueraDePantalla(float altoVentana) const;
-    sf::FloatRect getBounds() const;
+    void Mover();
+    void Dibujar(sf::RenderWindow& window);
+    bool FueraDePantalla(float altoVentana) const;
+    sf::FloatRect ObtenerLimites() const;
 private:
     sf::RectangleShape shape;
     static sf::Texture texturaDisparo;

@@ -5,8 +5,8 @@
 class Margen {
 public:
     Margen(float anchoVentana, float altoVentana, float grosor = 2.f);
-    void draw(sf::RenderWindow& window);
-    void limitar(Nave& nave); // Declaración de la función limitar
+    void Dibujar(sf::RenderWindow& window);
+    void Limitar(Nave& nave); // Declaración de la función limitar
 private:
     sf::RectangleShape lineaSuperior;
     sf::RectangleShape lineaInferior;

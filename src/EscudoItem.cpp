@@ -10,32 +10,32 @@ EscudoItem::EscudoItem(float x_, float y_) : x(x_), y(y_) {
     shape.setPosition(x, y);
 }
 
-void EscudoItem::mover(float limiteY, float limiteX, float velocidadY) {
+void EscudoItem::Mover(float limiteY, float limiteX, float velocidadY) {
     y += velocidadY;
     if (y > limiteY) {
-        reset(limiteX);
+        Reiniciar(limiteX);
     }
     shape.setPosition(x, y);
 }
 
-void EscudoItem::dibujar(sf::RenderWindow& window) {
+void EscudoItem::Dibujar(sf::RenderWindow& window) {
     shape.setPosition(x, y);
     window.draw(shape);
 }
 
-bool EscudoItem::colision(Nave& nave) {
-    if (shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
+bool EscudoItem::Colisionar(Nave& nave) {
+    if (shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }
     return false;
 }
 
-void EscudoItem::reset(float limiteX) {
+void EscudoItem::Reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
     shape.setPosition(x, y);
 }
 
-float EscudoItem::getY() const {
+float EscudoItem::ObtenerY() const {
     return y;
 }

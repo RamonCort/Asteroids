@@ -19,7 +19,7 @@ VidaExtra::VidaExtra(float x_, float y_) : x(x_), y(y_) {
 void VidaExtra::mover(float limiteY, float limiteX, float velocidadY) {
     y += velocidadY;
     if (y > limiteY) {
-        reset(limiteX);
+        Reiniciar(limiteX);
     }
     shape.setPosition(x, y);
     corazonSprite.setPosition(x, y);
@@ -31,13 +31,13 @@ void VidaExtra::dibujar(sf::RenderWindow& window) {
 }
 
 bool VidaExtra::colision(Nave& nave) {
-    if (shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
+    if (shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }
     return false;
 }
 
-void VidaExtra::reset(float limiteX) {
+void VidaExtra::Reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
     shape.setPosition(x, y);

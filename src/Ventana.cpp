@@ -254,7 +254,7 @@ void Ventana::mostrar() {
         sf::Clock relojInvulnerable;
         float duracionInvulnerable = 5.0f;
         // Inicializar posición real de escudoItem después de definir limiteX
-        escudoItem.reset(limiteX);
+        escudoItem.Reiniciar(limiteX);
     // --- Fondo ---
     sf::Texture fondoTexture;
     if (!fondoTexture.loadFromFile("assets/images/Fondo2.png")) {
@@ -369,7 +369,7 @@ void Ventana::mostrar() {
         while (window.isOpen() && !gameOver) {
             // Lógica de aparición de escudo cada 25 segundos
             if (!escudoItemActivo && relojEscudoItem.getElapsedTime().asSeconds() >= 25.0f) {
-                escudoItem.reset(limiteX);
+                escudoItem.Reiniciar(limiteX);
                 escudoItemActivo = true;
                 relojEscudoItem.restart();
             }
@@ -381,17 +381,17 @@ void Ventana::mostrar() {
             window.clear(sf::Color::Black);
             window.draw(fondoSprite); // Dibuja el fondo antes de todo
 
-            margen.draw(window);
-            nave.mover(window);
-            margen.limitar(nave);
+            margen.Dibujar(window);
+            nave.Mover(window);
+            margen.Limitar(nave);
 
             // Disparo de misil o láser
             bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
             if (armamentoSeleccionado == 0) { // Misil
                 if (disparoActual && !disparoAnterior) {
-                    sf::Vector2f navePos = nave.getSprite().getPosition();
+                    sf::Vector2f navePos = nave.ObtenerSprite().getPosition();
                     float misilX = navePos.x;
-                    float misilY = navePos.y - nave.getSprite().getGlobalBounds().height / 2;
+                    float misilY = navePos.y - nave.ObtenerSprite().getGlobalBounds().height / 2;
                     misiles.emplace_back(misilX, misilY);
                     sonidoLaser.play();
                 }
@@ -402,9 +402,9 @@ void Ventana::mostrar() {
                     sonidoLaser.play();
                 }
                 if (laserActivo) {
-                    sf::Vector2f navePos = nave.getSprite().getPosition();
+                    sf::Vector2f navePos = nave.ObtenerSprite().getPosition();
                     sf::VertexArray laser(sf::Lines, 2);
-                    laser[0].position = sf::Vector2f(navePos.x, navePos.y - nave.getSprite().getGlobalBounds().height / 2);
+                    laser[0].position = sf::Vector2f(navePos.x, navePos.y - nave.ObtenerSprite().getGlobalBounds().height / 2);
                     laser[0].color = sf::Color::Cyan;
                     laser[1].position = sf::Vector2f(navePos.x, 0);
                     laser[1].color = sf::Color::Cyan;
@@ -431,7 +431,7 @@ void Ventana::mostrar() {
 
             // --- COLISIONES ASTEROIDE-NAVE ---
             for (auto& ast : asteroides) {
-                if (!invulnerable && ast.colisionaConNave(nave)) {
+                if (!invulnerable && ast.ColisionarConNave(nave)) {
                     oportunidad.perderVida();
                     vida.setVidas(oportunidad.getVidas());
                     ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
@@ -445,15 +445,15 @@ void Ventana::mostrar() {
             }
             // Dibujar y mover escudo item si está activo
             if (escudoItemActivo) {
-                escudoItem.mover(limiteY, limiteX, 1.0f);
-                escudoItem.dibujar(window);
+                escudoItem.Mover(limiteY, limiteX, 1.0f);
+                escudoItem.Dibujar(window);
                 // Colisión con nave
-                if (escudoItem.colision(nave)) {
+                if (escudoItem.Colisionar(nave)) {
                     invulnerable = true;
                     relojInvulnerable.restart();
                     escudoItemActivo = false;
                 }
-                if (escudoItem.getY() > limiteY) {
+                if (escudoItem.ObtenerY() > limiteY) {
                     escudoItemActivo = false;
                 }
             }
@@ -466,13 +466,12 @@ void Ventana::mostrar() {
             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                 bool asteroideEliminado = false;
                 for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
-                    if (itAst->colisionaConMisil(*itMisil)) {
+                    if (itAst->ColisionarConMisil(*itMisil)) {
                         itMisil = misiles.erase(itMisil);
                         itAst = asteroides.erase(itAst);
                         asteroideEliminado = true;
                         punto.sumar(10);
-                        // Aumentar velocidad de la nave y de los asteroides cada vez que destruye un asteroide
-                        nave.setVelocidad(nave.getVelocidad() + 0.05f);
+                        nave.EstablecerVelocidad(nave.ObtenerVelocidad() + 0.05f);
                         velocidadAsteroide += 0.05f;
                         break;
                     } else {
@@ -486,11 +485,11 @@ void Ventana::mostrar() {
 
             // Mover y dibujar misiles
             for (auto it = misiles.begin(); it != misiles.end(); ) {
-                it->mover();
-                if (it->fueraDePantalla(0)) {
+                it->Mover();
+                if (it->FueraDePantalla(0)) {
                     it = misiles.erase(it);
                 } else {
-                    it->draw(window);
+                    it->Dibujar(window);
                     ++it;
                 }
             }
@@ -512,8 +511,8 @@ void Ventana::mostrar() {
 
             // Mover y dibujar asteroides con velocidad variable
             for (auto& ast : asteroides) {
-                ast.mover(limiteY, limiteX, velocidadAsteroide);
-                ast.dibujar(window);
+                ast.Mover(limiteY, limiteX, velocidadAsteroide);
+                ast.Dibujar(window);
             }
 
             // --- Agujero Negro central ---
@@ -533,7 +532,7 @@ void Ventana::mostrar() {
                 agujeroSprite.setRotation(agujeroRot);
                 window.draw(agujeroSprite);
                 // Detectar colisión SOLO con el centro del agujero
-                sf::Vector2f naveCentro = nave.getSprite().getPosition();
+                sf::Vector2f naveCentro = nave.ObtenerSprite().getPosition();
                 sf::Vector2f agujeroCentro = agujeroSprite.getPosition();
                 float distancia = std::sqrt(std::pow(naveCentro.x - agujeroCentro.x, 2) + std::pow(naveCentro.y - agujeroCentro.y, 2));
                 float radioColision = agujeroSprite.getGlobalBounds().width * 0.15f; // Solo el centro
@@ -579,13 +578,13 @@ void Ventana::mostrar() {
                     }
                 }
                 // Atracción para la nave
-                sf::Vector2f navePos = nave.getSprite().getPosition();
+                sf::Vector2f navePos = nave.ObtenerSprite().getPosition();
                 sf::Vector2f dirNave = agujeroCentro - navePos;
                 float distNave = std::sqrt(dirNave.x * dirNave.x + dirNave.y * dirNave.y);
                 if (distNave > 1.f) {
                     dirNave /= distNave;
                     float fuerzaNave = 0.10f * std::min(300.f, distNave) / 300.f * factorFuerza;
-                    nave.getSprite().move(dirNave * fuerzaNave);
+                    nave.ObtenerSprite().move(dirNave * fuerzaNave);
                 }
                 // Si la nave colisiona con el centro, puedes poner gameOver o efecto
                 float radioColisionNave = agujeroSprite.getGlobalBounds().width * 0.15f;
@@ -594,13 +593,13 @@ void Ventana::mostrar() {
                 }
                 // Atracción para el escudo
                 if (escudoItemActivo) {
-                    sf::Vector2f escudoPos(escudoItem.getX(), escudoItem.getY());
+                    sf::Vector2f escudoPos(escudoItem.ObtenerX(), escudoItem.ObtenerY());
                     sf::Vector2f dirEscudo = agujeroCentro - escudoPos;
                     float distEscudo = std::sqrt(dirEscudo.x * dirEscudo.x + dirEscudo.y * dirEscudo.y);
                     if (distEscudo > 1.f) {
                         dirEscudo /= distEscudo;
                         float fuerzaEscudo = 0.12f * std::min(300.f, distEscudo) / 300.f * factorFuerza;
-                        escudoItem.setPos(escudoPos.x + dirEscudo.x * fuerzaEscudo, escudoPos.y + dirEscudo.y * fuerzaEscudo);
+                        escudoItem.EstablecerPos(escudoPos.x + dirEscudo.x * fuerzaEscudo, escudoPos.y + dirEscudo.y * fuerzaEscudo);
                     }
                     float radioColisionEscudo = agujeroSprite.getGlobalBounds().width * 0.15f;
                     if (distEscudo < radioColisionEscudo) {
@@ -625,7 +624,7 @@ void Ventana::mostrar() {
             }
 
             // Dibuja la nave después del agujero negro para que quede encima
-            nave.draw(window);
+            nave.Dibujar(window);
 
             if (fontLoaded) {
                 errorText.setString("No se pudo cargar la imagen:\nassets/nave.png");
@@ -681,7 +680,7 @@ void Ventana::mostrar() {
 
             // Lógica de aparición de vida extra cada 20 segundos
             if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 20.0f) {
-                vidaExtra.reset(limiteX);
+                vidaExtra.Reiniciar(limiteX);
                 vidaExtraActiva = true;
                 relojVidaExtra.restart();
             }

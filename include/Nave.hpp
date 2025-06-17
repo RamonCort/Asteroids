@@ -5,11 +5,11 @@
 class Nave {
 public:
     Nave(float x, float y, const std::string& ruta = "assets/images/nave.png");
-    void draw(sf::RenderWindow& window);
-    void mover(const sf::RenderWindow& window);
-    sf::Sprite& getSprite(); // <-- Añadido para Margen
-    float getVelocidad() const { return velocidad; }
-    void setVelocidad(float v) { velocidad = v; }
+    void Dibujar(sf::RenderWindow& window);
+    void Mover(const sf::RenderWindow& window);
+    sf::Sprite& ObtenerSprite(); // <-- Añadido para Margen
+    float ObtenerVelocidad() const { return velocidad; }
+    void EstablecerVelocidad(float v) { velocidad = v; }
 protected:
     sf::Texture texture;
     sf::Sprite sprite;

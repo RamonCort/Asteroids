@@ -52,7 +52,7 @@ Margen::Margen(float anchoVentana, float altoVentana, float grosor)
     esquinaInfDer.setPosition(anchoVentana - margenDer - grosor - radio + grosor/2, altoVentana - margenInf - grosor - radio + grosor/2);
 }
 
-void Margen::draw(sf::RenderWindow& window) {
+void Margen::Dibujar(sf::RenderWindow& window) {
     window.draw(lineaSuperior);
     window.draw(lineaInferior);
     window.draw(lineaIzquierda);
@@ -63,9 +63,8 @@ void Margen::draw(sf::RenderWindow& window) {
     window.draw(esquinaInfDer);
 }
 
-// Limita la nave dentro del margen
-void Margen::limitar(Nave& nave) {
-    sf::Sprite& sprite = nave.getSprite();
+void Margen::Limitar(Nave& nave) {
+    sf::Sprite& sprite = nave.ObtenerSprite();
     sf::FloatRect bounds = sprite.getGlobalBounds();
     float minX = grosor + bounds.width / 2;
     float maxX = ancho - grosor - bounds.width / 2;

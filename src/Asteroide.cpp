@@ -25,14 +25,13 @@ Asteroide::Asteroide(float x_, float y_) : x(x_), y(y_) {
     sprite.setScale(0.5f, 0.5f); // Ajusta el tamaño si es necesario
 }
 
-float Asteroide::X() const { return x; }
-float Asteroide::Y() const { return y; }
+float Asteroide::ObtenerX() const { return x; }
+float Asteroide::ObtenerY() const { return y; }
 
-void Asteroide::dibujar(sf::RenderWindow& window) {
+void Asteroide::Dibujar(sf::RenderWindow& window) {
     if (textureCargada) {
         sprite.setPosition(x, y);
         sprite.rotate(2.0f); // Rota el asteroide cada frame
-        // Sin animación de color
         sprite.setColor(sf::Color::White);
         window.draw(sprite);
     } else {
@@ -41,7 +40,7 @@ void Asteroide::dibujar(sf::RenderWindow& window) {
     }
 }
 
-void Asteroide::mover(float limiteY, float limiteX, float velocidadY) {
+void Asteroide::Mover(float limiteY, float limiteX, float velocidadY) {
     y += velocidadY;
     if (y > limiteY) {
         x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
@@ -51,32 +50,32 @@ void Asteroide::mover(float limiteY, float limiteX, float velocidadY) {
     else shape.setPosition(x, y);
 }
 
-void Asteroide::colision(Nave& nave) {
+void Asteroide::Colisionar(Nave& nave) {
     if (textureCargada) {
-        if (sprite.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
+        if (sprite.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
             x = static_cast<float>(rand() %  (int)(800 - 40) + 20);
             y = 0;
         }
     } else {
-        if (shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds())) {
+        if (shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
             x = static_cast<float>(rand() %  (int)(800 - 40) + 20);
             y = 0;
         }
     }
 }
 
-bool Asteroide::colisionaConNave(Nave& nave) {
+bool Asteroide::ColisionarConNave(Nave& nave) {
     if (textureCargada) {
-        return sprite.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds());
+        return sprite.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds());
     } else {
-        return shape.getGlobalBounds().intersects(nave.getSprite().getGlobalBounds());
+        return shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds());
     }
 }
 
-bool Asteroide::colisionaConMisil(const Misil& misil) {
+bool Asteroide::ColisionarConMisil(const Misil& misil) {
     if (textureCargada) {
-        return sprite.getGlobalBounds().intersects(misil.getBounds());
+        return sprite.getGlobalBounds().intersects(misil.ObtenerLimites());
     } else {
-        return shape.getGlobalBounds().intersects(misil.getBounds());
+        return shape.getGlobalBounds().intersects(misil.ObtenerLimites());
     }
 }

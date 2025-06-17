@@ -6,13 +6,13 @@
 class Asteroide {
 public:
     Asteroide(float x, float y);
-    float X() const;
-    float Y() const;
-    void dibujar(sf::RenderWindow& window);
-    void mover(float limiteY, float limiteX, float velocidadY = 3.0f); // velocidadY por defecto 3.0f
-    void colision(Nave& nave);
-    bool colisionaConNave(Nave& nave);
-    bool colisionaConMisil(const Misil& misil);
+    float ObtenerX() const;
+    float ObtenerY() const;
+    void Dibujar(sf::RenderWindow& window);
+    void Mover(float limiteY, float limiteX, float velocidadY = 3.0f); // velocidadY por defecto 3.0f
+    void Colisionar(Nave& nave);
+    bool ColisionarConNave(Nave& nave);
+    bool ColisionarConMisil(const Misil& misil);
     sf::CircleShape shape; // <-- Fallback si no hay textura
     float x, y; // <-- Posición
     static sf::Texture textureAsteroide;

@@ -14,7 +14,7 @@ Nave::Nave(float x, float y, const std::string& ruta) {
     velocidad = 1.0f; // Ahora el doble de rápido que antes (antes 0.5f)
 }
 
-void Nave::mover(const sf::RenderWindow& window) {
+void Nave::Mover(const sf::RenderWindow& window) {
     // Movimiento libre, sin límites de ventana
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
         sprite.move(-velocidad, 0);
@@ -26,10 +26,10 @@ void Nave::mover(const sf::RenderWindow& window) {
         sprite.move(0, velocidad);
 }
 
-void Nave::draw(sf::RenderWindow& window) {
+void Nave::Dibujar(sf::RenderWindow& window) {
     window.draw(sprite);
 }
 
-sf::Sprite& Nave::getSprite() {
+sf::Sprite& Nave::ObtenerSprite() {
     return sprite;
 }

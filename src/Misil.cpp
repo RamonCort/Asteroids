@@ -27,7 +27,7 @@ Misil::Misil(float x, float y) : velocidad(7.0f) {
     }
 }
 
-void Misil::mover() {
+void Misil::Mover() {
     if (texturaDisparo.getSize().x > 0) {
         spriteDisparo.move(0, -velocidad);
         // Animación de frames (solo primera fila)
@@ -43,21 +43,21 @@ void Misil::mover() {
     }
 }
 
-void Misil::draw(sf::RenderWindow& window) {
+void Misil::Dibujar(sf::RenderWindow& window) {
     if (texturaDisparo.getSize().x > 0)
         window.draw(spriteDisparo);
     else
         window.draw(shape);
 }
 
-bool Misil::fueraDePantalla(float altoVentana) const {
+bool Misil::FueraDePantalla(float altoVentana) const {
     if (texturaDisparo.getSize().x > 0)
         return spriteDisparo.getPosition().y + frameHeight < 0;
     else
         return shape.getPosition().y + shape.getSize().y < 0;
 }
 
-sf::FloatRect Misil::getBounds() const {
+sf::FloatRect Misil::ObtenerLimites() const {
     if (texturaDisparo.getSize().x > 0)
         return spriteDisparo.getGlobalBounds();
     else

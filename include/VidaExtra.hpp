@@ -8,7 +8,7 @@ public:
     void mover(float limiteY, float limiteX, float velocidadY = 1.0f);
     void dibujar(sf::RenderWindow& window);
     bool colision(Nave& nave);
-    void reset(float limiteX);
+    void Reiniciar(float limiteX);
     float getY() const;
     float getX() const { return x; }
     void setX(float nx) { x = nx; shape.setPosition(x, y); }
