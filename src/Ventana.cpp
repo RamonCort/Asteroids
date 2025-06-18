@@ -238,9 +238,7 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
         }
         if (!cursorVisible) {
             textoNombre.setString(nombre); // Oculta el cursor
-        }
-
-        window.clear(sf::Color::Black);
+        }        window.clear(sf::Color::Black);
         window.draw(fondoSprite); // Dibuja el fondo
         window.draw(tituloNombre); // Dibuja el texto grande
         window.draw(leyenda);
@@ -248,6 +246,7 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
         window.draw(textoNombre);
         window.display();
     }
+    return nombre; // Return por defecto en caso de que la ventana se cierre
 }
 
 void Ventana::mostrar() {
@@ -286,61 +285,78 @@ void Ventana::mostrar() {
     // Pedir nombre antes de elegir nave
     std::string nombreJugador = pedirNombre(window, fontGlobal);
     // Menú de nave con título
-    int naveSeleccionada = seleccionarNave(window, fontGlobal);
-    // Menú de armamento
+    int naveSeleccionada = seleccionarNave(window, fontGlobal);    // Menú de armamento
     int armamentoSeleccionado = seleccionarArmamento(window, fontGlobal);
     std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
 
+    // --- Variables de juego declaradas fuera del bucle ---
+    float cx = window.getSize().x / 2.f;
+    float cy = window.getSize().y / 2.f;
+    Nave nave(cx, cy, navePath);
+
+    std::vector<Misil> misiles;
+    bool disparoAnterior = false;    Margen margen(window.getSize().x, window.getSize().y);
+    Punto punto;
+    sf::Font fontPuntos;
+    fontPuntos.loadFromFile("assets/arial.ttf"); // Cargar la fuente aquí
+    Puntaje puntaje(window.getSize().x);
+    Vida vida;
+    int vidas = 3;
+    vida.setVidas(vidas);
+
+    Oportunidad oportunidad(3, 3);
+    vida.setVidas(oportunidad.getVidas());
+
+    std::vector<Asteroide> asteroides;
+    int cantidadAsteroides = 5;
+    // limiteX y limiteY ya declarados arriba
+
+    sf::Clock relojAsteroides;
+    int asteroidesCreados = 0;
+    float tiempoEntreAsteroides = 2.5f;
+
+    float velocidadAsteroide = 0.6f;
+    int ultimoPuntajeVel = 0;
+
+    // Variables para vida extra
+    VidaExtra vidaExtra(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+    sf::Clock relojVidaExtra;
+    bool vidaExtraActiva = false;
+
+    // Doble disparo
+    DobleDisparoItem dobleDisparoItem(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+    sf::Clock relojDobleDisparo;
+    bool dobleDisparoEnPantalla = false;
+    bool dobleDisparoActivo = false;
+    float tiempoDobleDisparo = 0.0f;
+
     while (window.isOpen()) {
-        // --- Bucle de juego principal ---
-        // Variables de juego
-        float cx = window.getSize().x / 2.f;
-        float cy = window.getSize().y / 2.f;
-        Nave nave(cx, cy, navePath); // Modifica el constructor de Nave para aceptar ruta
 
-        std::vector<Misil> misiles;
-        bool disparoAnterior = false;
 
-        Margen margen(window.getSize().x, window.getSize().y);
-        Punto punto;
-        sf::Font fontPuntos;
-        bool fuenteCargada = fontPuntos.loadFromFile("assets/arial.ttf");
-        Puntaje puntaje(window.getSize().x);
-        Vida vida;
-        int vidas = 3; // Puedes actualizar este valor según la lógica de tu juego
-        vida.setVidas(vidas);
-
-        // Incluir Oportunidad.hpp en el encabezado, no aquí
-        Oportunidad oportunidad(3, 3);
-        vida.setVidas(oportunidad.getVidas());
-
-        std::vector<Asteroide> asteroides;
-        int cantidadAsteroides = 5;
-        float limiteX = window.getSize().x;
-        float limiteY = window.getSize().y;
-
-        sf::Clock relojAsteroides;
-        int asteroidesCreados = 0;
-        float tiempoEntreAsteroides = 2.5f;
-
-        float velocidadAsteroide = 0.6f;
-        int ultimoPuntajeVel = 0;
-
-        // Vida extra
-        VidaExtra vidaExtra(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
-        sf::Clock relojVidaExtra;
-        bool vidaExtraActiva = false;
-
-        // Doble disparo
-        DobleDisparoItem dobleDisparoItem(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
-        sf::Clock relojDobleDisparo;
-        bool dobleDisparoEnPantalla = false;
-        bool dobleDisparoActivo = false;
-        float tiempoDobleDisparo = 0.0f; // Al iniciar, el poder está desactivado
-
-        for (int i = 0; i < cantidadAsteroides; ++i) {
-            float ax = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
-            float ay = static_cast<float>(rand() % 100);
+for (int i = 0; i < cantidadAsteroides; ++i) {
+            // Crear asteroides en posiciones aleatorias del margen
+            int lado = rand() % 4;
+            float ax, ay;
+            
+            switch (lado) {
+                case 0: // Arriba
+                    ax = static_cast<float>(rand() % static_cast<int>(limiteX));
+                    ay = -40;
+                    break;
+                case 1: // Derecha
+                    ax = limiteX + 40;
+                    ay = static_cast<float>(rand() % static_cast<int>(limiteY));
+                    break;
+                case 2: // Abajo
+                    ax = static_cast<float>(rand() % static_cast<int>(limiteX));
+                    ay = limiteY + 40;
+                    break;
+                case 3: // Izquierda
+                    ax = -40;
+                    ay = static_cast<float>(rand() % static_cast<int>(limiteY));
+                    break;
+            }
+            
             asteroides.emplace_back(ax, ay);
         }
 
@@ -431,14 +447,28 @@ void Ventana::mostrar() {
                     laser[0].color = sf::Color::Cyan;
                     laser[1].position = sf::Vector2f(navePos.x, 0);
                     laser[1].color = sf::Color::Cyan;
-                    window.draw(laser);
-                    // Colisión del láser con asteroides
+                    window.draw(laser);                    // Colisión del láser con asteroides
                     for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                         sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
                         float xLaser = navePos.x;
                         if (xLaser >= bounds.left && xLaser <= bounds.left + bounds.width) {
-                            itAst = asteroides.erase(itAst);
-                            punto.sumar(10);
+                            // Verificar si el asteroide puede destruirse completamente
+                            if (itAst->PuedeDestruirse()) {
+                                // Asteroide pequeño, se destruye completamente
+                                itAst = asteroides.erase(itAst);
+                                punto.sumar(30); // Más puntos por destruir completamente
+                            } else {
+                                // Asteroide grande o mediano, se divide
+                                std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
+                                itAst = asteroides.erase(itAst);
+                                
+                                // Agregar los asteroides resultantes de la división
+                                for (const auto& nuevoAst : nuevosAsteroides) {
+                                    asteroides.push_back(nuevoAst);
+                                }
+                                
+                                punto.sumar(10); // Puntos por dividir
+                            }
                         } else {
                             ++itAst;
                         }
@@ -483,19 +513,35 @@ void Ventana::mostrar() {
             // Control de duración de invulnerabilidad
             if (invulnerable && relojInvulnerable.getElapsedTime().asSeconds() >= duracionInvulnerable) {
                 invulnerable = false;
-            }
-
-            // --- COLISIONES MISIL-ASTEROIDE ---
+            }            // --- COLISIONES MISIL-ASTEROIDE ---
             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                 bool asteroideEliminado = false;
                 for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
                     if (itAst->ColisionarConMisil(*itMisil)) {
                         itMisil = misiles.erase(itMisil);
-                        itAst = asteroides.erase(itAst);
-                        asteroideEliminado = true;
-                        punto.sumar(10);
+                        
+                        // Verificar si el asteroide puede destruirse completamente
+                        if (itAst->PuedeDestruirse()) {
+                            // Asteroide pequeño, se destruye completamente
+                            itAst = asteroides.erase(itAst);
+                            asteroideEliminado = true;
+                            punto.sumar(30); // Más puntos por destruir completamente
+                        } else {
+                            // Asteroide grande o mediano, se divide
+                            std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
+                            itAst = asteroides.erase(itAst);
+                            asteroideEliminado = true;
+                            
+                            // Agregar los asteroides resultantes de la división
+                            for (const auto& nuevoAst : nuevosAsteroides) {
+                                asteroides.push_back(nuevoAst);
+                            }
+                            
+                            punto.sumar(10); // Puntos por dividir
+                        }
+                        
+                        // Solo aumentar velocidad de la nave, no de los asteroides
                         nave.EstablecerVelocidad(nave.ObtenerVelocidad() + 0.05f);
-                        velocidadAsteroide += 0.05f;
                         break;
                     } else {
                         ++itMisil;
@@ -515,26 +561,41 @@ void Ventana::mostrar() {
                     it->Dibujar(window);
                     ++it;
                 }
-            }
-
-            // Aumentar velocidad de los asteroides cada 30 puntos en un 20%
+            }            // Aumentar velocidad de los asteroides cada 90 puntos en un 20%
             int puntosActuales = punto.getPuntos();
-            if (puntosActuales >= 30 && (puntosActuales / 30) > (ultimoPuntajeVel / 30)) {
+            if (puntosActuales >= 90 && (puntosActuales / 90) > (ultimoPuntajeVel / 90)) {
                 velocidadAsteroide *= 1.2f;
                 ultimoPuntajeVel = puntosActuales;
-            }
-
-            // Crear un nuevo asteroide cada 2.5 segundos hasta llegar a la cantidad deseada
+            }// Crear un nuevo asteroide cada 2.5 segundos hasta llegar a la cantidad deseada
             if (asteroides.size() < cantidadAsteroides && relojAsteroides.getElapsedTime().asSeconds() >= tiempoEntreAsteroides) {
-                float ax = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
-                float ay = static_cast<float>(rand() % 100);
+                // Crear asteroide en posición aleatoria del margen
+                int lado = rand() % 4;
+                float ax, ay;
+                
+                switch (lado) {
+                    case 0: // Arriba
+                        ax = static_cast<float>(rand() % static_cast<int>(limiteX));
+                        ay = -40;
+                        break;
+                    case 1: // Derecha
+                        ax = limiteX + 40;
+                        ay = static_cast<float>(rand() % static_cast<int>(limiteY));
+                        break;
+                    case 2: // Abajo
+                        ax = static_cast<float>(rand() % static_cast<int>(limiteX));
+                        ay = limiteY + 40;
+                        break;
+                    case 3: // Izquierda
+                        ax = -40;
+                        ay = static_cast<float>(rand() % static_cast<int>(limiteY));
+                        break;
+                }
+                
                 asteroides.emplace_back(ax, ay);
                 relojAsteroides.restart();
-            }
-
-            // Mover y dibujar asteroides con velocidad variable
+            }// Mover y dibujar asteroides con movimiento teledirigido hacia la nave
             for (auto& ast : asteroides) {
-                ast.Mover(limiteY, limiteX, velocidadAsteroide);
+                ast.MoverHaciaObjetivo(nave.ObtenerSprite().getPosition(), limiteY, limiteX, velocidadAsteroide);
                 ast.Dibujar(window);
             }
 

@@ -1,5 +1,5 @@
 Geo 420
 Geopollito 250
+d 250
 Geopato 170
 Geo 160
-Juan 150

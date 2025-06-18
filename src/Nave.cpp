@@ -13,20 +13,12 @@ Nave::Nave(float x, float y, const std::string& ruta) {
     sprite.setOrigin(bounds.width / 2, bounds.height / 2);
     sprite.setPosition(x, y);
     velocidad = 1.0f; // Ahora el doble de rápido que antes (antes 0.5f)
-      // Inicializar posición anterior para el rastro
+    
+    // Inicializar posición anterior para el rastro
     posicionAnterior = sf::Vector2f(x, y);
     
-    // Determinar si tiene rastro y su color según la nave
-    if (ruta.find("AstroNave_pixil.png") != std::string::npos) {
-        tieneRastro = true;
-        colorRastro = sf::Color(0, 150, 255); // Azul para la nave de la izquierda
-    } else if (ruta.find("nave.png") != std::string::npos) {
-        tieneRastro = true;
-        colorRastro = sf::Color(255, 140, 0); // Naranja para la nave de la derecha
-    } else {
-        tieneRastro = false;
-        colorRastro = sf::Color::White; // Color por defecto
-    }
+    // Solo la nave de la izquierda (AstroNave_pixil.png) tiene rastro
+    tieneRastro = (ruta.find("AstroNave_pixil.png") != std::string::npos);
 }
 
 void Nave::Mover(const sf::RenderWindow& window) {
@@ -54,7 +46,8 @@ void Nave::Mover(const sf::RenderWindow& window) {
         movimiento.y += velocidad;
     
     // Determinar si la nave se está moviendo
-    seEstaMoviendo = (movimiento.x != 0.f || movimiento.y != 0.f);      // Crear partículas de rastro si se está moviendo y la nave tiene rastro
+    seEstaMoviendo = (movimiento.x != 0.f || movimiento.y != 0.f);
+      // Crear partículas de rastro si se está moviendo y la nave tiene rastro
     if (seEstaMoviendo && tieneRastro) {
         // Calcular la posición trasera de la nave basada en su rotación
         float angulo = sprite.getRotation() - 90.f; // -90 porque la nave apunta hacia arriba por defecto
@@ -64,26 +57,13 @@ void Nave::Mover(const sf::RenderWindow& window) {
         sf::FloatRect bounds = sprite.getGlobalBounds();
         float distanciaTrasera = bounds.height * 0.4f; // Distancia desde el centro hacia la parte trasera
         
-        // Calcular el vector perpendicular para el ancho de la nave
-        sf::Vector2f vectorPerpendicular;
-        vectorPerpendicular.x = -std::sin(rad);
-        vectorPerpendicular.y = std::cos(rad);
-          // Crear múltiples partículas a lo ancho de la parte posterior
-        int numParticulas = 5; // Ahora 5 rayos de turbo
-        float anchoNave = bounds.width * 0.6f; // Ancho de la parte posterior
+        // Calcular la posición trasera
+        sf::Vector2f posicionTrasera;
+        posicionTrasera.x = posicionActual.x - std::cos(rad) * distanciaTrasera;
+        posicionTrasera.y = posicionActual.y - std::sin(rad) * distanciaTrasera;
         
-        for (int i = 0; i < numParticulas; i++) {
-            // Calcular offset lateral para distribuir partículas a lo ancho
-            float offset = (i - numParticulas/2.0f) * (anchoNave / numParticulas);
-            
-            // Calcular la posición trasera con offset lateral
-            sf::Vector2f posicionTrasera;
-            posicionTrasera.x = posicionActual.x - std::cos(rad) * distanciaTrasera + vectorPerpendicular.x * offset;
-            posicionTrasera.y = posicionActual.y - std::sin(rad) * distanciaTrasera + vectorPerpendicular.y * offset;
-            
-            // Agregar nueva partícula de rastro
-            particulas.emplace_back(posicionTrasera);
-        }
+        // Agregar nueva partícula de rastro
+        particulas.emplace_back(posicionTrasera);
     }
     
     sprite.move(movimiento);
@@ -138,10 +118,9 @@ void Nave::DibujarRastro(sf::RenderWindow& window) {
         sf::CircleShape punto(2.f); // Tamaño pequeño para el efecto de rastro
         punto.setPosition(particula.posicion.x - 2.f, particula.posicion.y - 2.f);
         
-        // Usar el color específico de la nave con transparencia que se desvanece
-        sf::Color colorConAlpha = colorRastro;
-        colorConAlpha.a = particula.alpha;
-        punto.setFillColor(colorConAlpha);
+        // Color azul con transparencia que se desvanece
+        sf::Color colorAzul(0, 150, 255, particula.alpha);
+        punto.setFillColor(colorAzul);
         
         window.draw(punto);
     }

@@ -28,10 +28,10 @@ public:
 protected:
     sf::Texture texture;
     sf::Sprite sprite;
-    float velocidad = 5.0f;    // Sistema de rastro
+    float velocidad = 5.0f;
+      // Sistema de rastro
     std::vector<ParticulaRastro> particulas;
     sf::Vector2f posicionAnterior;
     bool seEstaMoviendo = false;
-    bool tieneRastro = false; // Solo las naves seleccionables tienen rastro
-    sf::Color colorRastro; // Color del rastro según la nave
+    bool tieneRastro = false; // Solo la nave de la izquierda tiene rastro
 };
