@@ -3,13 +3,11 @@
 #include "../include/DobleDisparoItem.hpp"
 
 DobleDisparoItem::DobleDisparoItem(float x_, float y_) : x(x_), y(y_) {
-    shape.setRadius(22.f);
-    shape.setPointCount(20);
-    shape.setFillColor(sf::Color::Red);
-    shape.setOutlineColor(sf::Color::White);
-    shape.setOutlineThickness(3);
-    shape.setOrigin(22.f, 22.f);
-    shape.setPosition(x, y);
+    textura.loadFromFile("assets/images/Doble_Disparo_Item.png");
+    sprite.setTexture(textura);
+    sprite.setOrigin(textura.getSize().x/2, textura.getSize().y/2);
+    sprite.setPosition(x, y);
+    sprite.setScale(0.12f, 0.12f); // Más pequeño que el escudo
     angulo = 0.f;
     velocidadRotacion = 2.f;
     direccionRotacion = 1;
@@ -21,7 +19,7 @@ void DobleDisparoItem::mover(float limiteY, float limiteX, float velocidadY) {
     if (y > limiteY) {
         reiniciar(limiteX);
     }
-    shape.setPosition(x, y);
+    sprite.setPosition(x, y);
     // Animar rotación y cambio de dirección
     if (relojCambioDireccion.getElapsedTime().asSeconds() > 0.7f) {
         direccionRotacion = (rand() % 2 == 0) ? 1 : -1;
@@ -29,22 +27,22 @@ void DobleDisparoItem::mover(float limiteY, float limiteX, float velocidadY) {
         relojCambioDireccion.restart();
     }
     angulo += velocidadRotacion * direccionRotacion;
-    shape.setRotation(angulo);
+    sprite.setRotation(angulo);
 }
 
 void DobleDisparoItem::dibujar(sf::RenderWindow& window) {
-    shape.setPosition(x, y);
-    window.draw(shape);
+    sprite.setPosition(x, y);
+    window.draw(sprite);
 }
 
 bool DobleDisparoItem::colision(sf::Sprite& naveSprite) {
-    return shape.getGlobalBounds().intersects(naveSprite.getGlobalBounds());
+    return sprite.getGlobalBounds().intersects(naveSprite.getGlobalBounds());
 }
 
 void DobleDisparoItem::reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
-    shape.setPosition(x, y);
+    sprite.setPosition(x, y);
 }
 
 float DobleDisparoItem::getY() const { return y; }

@@ -10,10 +10,11 @@ public:
     void reiniciar(float limiteX);
     float getY() const;
     float getX() const { return x; }
-    void setPos(float nx, float ny) { x = nx; y = ny; shape.setPosition(x, y); }
+    void setPos(float nx, float ny) { x = nx; y = ny; sprite.setPosition(x, y); }
 private:
     float x, y;
-    sf::CircleShape shape;
+    sf::Texture textura;
+    sf::Sprite sprite;
     float angulo;
     float velocidadRotacion;
     int direccionRotacion;

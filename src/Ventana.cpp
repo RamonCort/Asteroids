@@ -16,6 +16,7 @@
 #include "../include/Asteroide.hpp"
 #include <cmath> // Nueva inclusión para std::sin
 #include "../include/TablaDePuntaje.hpp"
+#include "../include/Explosion.hpp"
 
 // Prototipo de la función de selección de armamento
 int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font);
@@ -113,6 +114,7 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     nave1.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f);
     nave2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
     int seleccion = 0; // 0 = AstroNave, 1 = nave normal
+
     bool elegido = false;
     sf::Text txt("Elige tu nave: ← → ENTER", font, 48);
     txt.setFillColor(sf::Color::Yellow);
@@ -122,10 +124,10 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     txt.setOrigin(txtBounds.width / 2, txtBounds.height / 2);
     txt.setPosition(window.getSize().x/2.f, window.getSize().y/2.f-180);
 
-    // Cargar fuente Morally Serif para la leyenda
-    sf::Font fontMorallySerif;
-    fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf");
-    sf::Text leyenda("Favor de seleccionar su nave", fontMorallySerif, 44);
+    // Cargar fuente Retro Gaming para la leyenda
+    sf::Font fontRetroGaming;
+    fontRetroGaming.loadFromFile("assets/fonts/Retro Gaming.ttf");
+    sf::Text leyenda("Favor de seleccionar su nave", fontRetroGaming, 44);
     leyenda.setFillColor(sf::Color(80, 160, 255)); // Azul
     leyenda.setOutlineColor(sf::Color::Black);
     leyenda.setOutlineThickness(4.f);
@@ -134,6 +136,7 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
     leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220);
 
+    sf::Clock animClock;
     while(window.isOpen() && !elegido) {
         sf::Event event;
         while(window.pollEvent(event)) {
@@ -144,6 +147,10 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
                 if(event.key.code == sf::Keyboard::Enter) elegido = true;
             }
         }
+        float t = animClock.getElapsedTime().asSeconds();
+        float offset = std::sin(t * 2.5f) * 18.f; // Rebote suave
+        leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220 + offset);
+        txt.setPosition(window.getSize().x/2.f, window.getSize().y/2.f-180 + offset/2.f);
         window.clear(sf::Color::Black);
         window.draw(leyenda);
         window.draw(txt);
@@ -168,7 +175,7 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     texto.setOrigin(textoBounds.width / 2, textoBounds.height / 2);
 
     sf::Font inputFont;
-    if (!inputFont.loadFromFile("assets/fonts/Morally Serif.otf")) {
+    if (!inputFont.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
         inputFont = font;
     }
     // Leyenda centrada y bonita arriba del recuadro
@@ -250,18 +257,19 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
 }
 
 void Ventana::mostrar() {
-        // --- Variables de límites de ventana ---
-        float limiteX = window.getSize().x;
-        float limiteY = window.getSize().y;
-        // Escudo item (invulnerabilidad)
-        EscudoItem escudoItem(0, 0); // Se inicializa con valores dummy
-        sf::Clock relojEscudoItem;
-        bool escudoItemActivo = false;
-        bool invulnerable = false;
-        sf::Clock relojInvulnerable;
-        float duracionInvulnerable = 5.0f;
-        // Inicializar posición real de escudoItem después de definir limiteX
-        escudoItem.Reiniciar(limiteX);
+    inicio:
+    // --- Variables de límites de ventana ---
+    float limiteX = window.getSize().x;
+    float limiteY = window.getSize().y;
+    // Escudo item (invulnerabilidad)
+    EscudoItem escudoItem(0, 0); // Se inicializa con valores dummy
+    sf::Clock relojEscudoItem;
+    bool escudoItemActivo = false;
+    bool invulnerable = false;
+    sf::Clock relojInvulnerable;
+    float duracionInvulnerable = 5.0f;
+    // Inicializar posición real de escudoItem después de definir limiteX
+    escudoItem.Reiniciar(limiteX);
     // --- Fondo ---
     sf::Texture fondoTexture;
     if (!fondoTexture.loadFromFile("assets/images/Fondo2.png")) {
@@ -329,6 +337,9 @@ void Ventana::mostrar() {
     bool dobleDisparoEnPantalla = false;
     bool dobleDisparoActivo = false;
     float tiempoDobleDisparo = 0.0f;
+
+    // Vector para animaciones de explosión
+    std::vector<Explosion> explosiones;
 
     while (window.isOpen()) {
 
@@ -441,36 +452,119 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     sonidoLaser.play();
                 }
                 if (laserActivo) {
-                    sf::Vector2f navePos = nave.ObtenerSprite().getPosition();
-                    sf::VertexArray laser(sf::Lines, 2);
-                    laser[0].position = sf::Vector2f(navePos.x, navePos.y - nave.ObtenerSprite().getGlobalBounds().height / 2);
-                    laser[0].color = sf::Color::Cyan;
-                    laser[1].position = sf::Vector2f(navePos.x, 0);
-                    laser[1].color = sf::Color::Cyan;
-                    window.draw(laser);                    // Colisión del láser con asteroides
-                    for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
-                        sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
-                        float xLaser = navePos.x;
-                        if (xLaser >= bounds.left && xLaser <= bounds.left + bounds.width) {
-                            // Verificar si el asteroide puede destruirse completamente
-                            if (itAst->PuedeDestruirse()) {
-                                // Asteroide pequeño, se destruye completamente
-                                itAst = asteroides.erase(itAst);
-                                punto.sumar(30); // Más puntos por destruir completamente
-                            } else {
-                                // Asteroide grande o mediano, se divide
-                                std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
-                                itAst = asteroides.erase(itAst);
-                                
-                                // Agregar los asteroides resultantes de la división
-                                for (const auto& nuevoAst : nuevosAsteroides) {
-                                    asteroides.push_back(nuevoAst);
+                    sf::Sprite& naveSprite = nave.ObtenerSprite();
+                    float angulo = naveSprite.getRotation() - 90.f;
+                    float rad = angulo * 3.14159265f / 180.f;
+                    float largo = naveSprite.getGlobalBounds().height * naveSprite.getScale().y / 2.f;
+                    float ancho = naveSprite.getGlobalBounds().width * naveSprite.getScale().x;
+                    float offsetLateral = ancho * 0.28f; // Igual que para misiles dobles
+                    sf::Vector2f dirLaser(std::cos(rad), std::sin(rad));
+                    float largoLaser = window.getSize().y * 1.2f;
+                    // Centro
+                    sf::Vector2f puntaNave = naveSprite.getPosition() + dirLaser * largo;
+                    sf::Vector2f finLaser = puntaNave + dirLaser * largoLaser;
+                    // Si doble disparo, dos láseres laterales
+                    if (dobleDisparoHabilitado) {
+                        sf::Vector2f lateral(-dirLaser.y, dirLaser.x);
+                        sf::Vector2f puntaIzq = naveSprite.getPosition() + lateral * offsetLateral + dirLaser * largo;
+                        sf::Vector2f puntaDer = naveSprite.getPosition() - lateral * offsetLateral + dirLaser * largo;
+                        sf::Vector2f finIzq = puntaIzq + dirLaser * largoLaser;
+                        sf::Vector2f finDer = puntaDer + dirLaser * largoLaser;
+                        sf::VertexArray laserIzq(sf::Lines, 2);
+                        laserIzq[0].position = puntaIzq;
+                        laserIzq[0].color = sf::Color::Cyan;
+                        laserIzq[1].position = finIzq;
+                        laserIzq[1].color = sf::Color::Cyan;
+                        sf::VertexArray laserDer(sf::Lines, 2);
+                        laserDer[0].position = puntaDer;
+                        laserDer[0].color = sf::Color::Cyan;
+                        laserDer[1].position = finDer;
+                        laserDer[1].color = sf::Color::Cyan;
+                        window.draw(laserIzq);
+                        window.draw(laserDer);
+                        // Colisión para ambos láseres laterales
+                        auto colisionLaser = [&](const sf::Vector2f& start, const sf::Vector2f& end) {
+                            for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
+                                sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
+                                std::vector<std::pair<sf::Vector2f, sf::Vector2f>> lados = {
+                                    {sf::Vector2f(bounds.left, bounds.top), sf::Vector2f(bounds.left + bounds.width, bounds.top)},
+                                    {sf::Vector2f(bounds.left, bounds.top), sf::Vector2f(bounds.left, bounds.top + bounds.height)},
+                                    {sf::Vector2f(bounds.left + bounds.width, bounds.top), sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height)},
+                                    {sf::Vector2f(bounds.left, bounds.top + bounds.height), sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height)}
+                                };
+                                bool intersecta = false;
+                                for (const auto& lado : lados) {
+                                    float denom = (end.x - start.x) * (lado.second.y - lado.first.y) - (end.y - start.y) * (lado.second.x - lado.first.x);
+                                    if (denom == 0) continue;
+                                    float ua = ((lado.second.x - lado.first.x) * (start.y - lado.first.y) - (lado.second.y - lado.first.y) * (start.x - lado.first.x)) / denom;
+                                    float ub = ((end.x - start.x) * (start.y - lado.first.y) - (end.y - start.y) * (start.x - lado.first.x)) / denom;
+                                    if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                                        intersecta = true;
+                                        break;
+                                    }
                                 }
-                                
-                                punto.sumar(10); // Puntos por dividir
+                                if (intersecta) {
+                                    if (itAst->PuedeDestruirse()) {
+                                        itAst = asteroides.erase(itAst);
+                                        punto.sumar(30);
+                                    } else {
+                                        std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
+                                        itAst = asteroides.erase(itAst);
+                                        for (const auto& nuevoAst : nuevosAsteroides) {
+                                            asteroides.push_back(nuevoAst);
+                                        }
+                                        punto.sumar(10);
+                                    }
+                                } else {
+                                    ++itAst;
+                                }
                             }
-                        } else {
-                            ++itAst;
+                        };
+                        colisionLaser(puntaIzq, finIzq);
+                        colisionLaser(puntaDer, finDer);
+                    } else {
+                        // Láser normal (centro)
+                        sf::VertexArray laser(sf::Lines, 2);
+                        laser[0].position = puntaNave;
+                        laser[0].color = sf::Color::Cyan;
+                        laser[1].position = finLaser;
+                        laser[1].color = sf::Color::Cyan;
+                        window.draw(laser);
+                        // Colisión del láser con asteroides (destruye todo lo que toca)
+                        for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
+                            sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
+                            std::vector<std::pair<sf::Vector2f, sf::Vector2f>> lados = {
+                                {sf::Vector2f(bounds.left, bounds.top), sf::Vector2f(bounds.left + bounds.width, bounds.top)},
+                                {sf::Vector2f(bounds.left, bounds.top), sf::Vector2f(bounds.left, bounds.top + bounds.height)},
+                                {sf::Vector2f(bounds.left + bounds.width, bounds.top), sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height)},
+                                {sf::Vector2f(bounds.left, bounds.top + bounds.height), sf::Vector2f(bounds.left + bounds.width, bounds.top + bounds.height)}
+                            };
+                            bool intersecta = false;
+                            for (const auto& lado : lados) {
+                                float denom = (finLaser.x - puntaNave.x) * (lado.second.y - lado.first.y) - (finLaser.y - puntaNave.y) * (lado.second.x - lado.first.x);
+                                if (denom == 0) continue;
+                                float ua = ((lado.second.x - lado.first.x) * (puntaNave.y - lado.first.y) - (lado.second.y - lado.first.y) * (puntaNave.x - lado.first.x)) / denom;
+                                float ub = ((finLaser.x - puntaNave.x) * (puntaNave.y - lado.first.y) - (finLaser.y - puntaNave.y) * (puntaNave.x - lado.first.x)) / denom;
+                                if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                                    intersecta = true;
+                                    break;
+                                }
+                            }
+                            if (intersecta) {
+                                if (itAst->PuedeDestruirse()) {
+                                    itAst = asteroides.erase(itAst);
+                                    punto.sumar(30);
+                                } else {
+                                    std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
+                                    itAst = asteroides.erase(itAst);
+                                    for (const auto& nuevoAst : nuevosAsteroides) {
+                                        asteroides.push_back(nuevoAst);
+                                    }
+                                    punto.sumar(10);
+                                }
+                            } else {
+                                ++itAst;
+                            }
                         }
                     }
                     if (relojLaser.getElapsedTime().asSeconds() >= duracionLaser || !disparoActual) {
@@ -540,6 +634,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                             punto.sumar(10); // Puntos por dividir
                         }
                         
+                        // Crear explosión en la posición del asteroide destruido
+                        explosiones.emplace_back(itAst->ObtenerX(), itAst->ObtenerY());
+
                         // Solo aumentar velocidad de la nave, no de los asteroides
                         nave.EstablecerVelocidad(nave.ObtenerVelocidad() + 0.05f);
                         break;
@@ -594,9 +691,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 asteroides.emplace_back(ax, ay);
                 relojAsteroides.restart();
             }// Mover y dibujar asteroides con movimiento teledirigido hacia la nave
-            for (auto& ast : asteroides) {
-                ast.MoverHaciaObjetivo(nave.ObtenerSprite().getPosition(), limiteY, limiteX, velocidadAsteroide);
-                ast.Dibujar(window);
+            for (auto& asteroide : asteroides) {
+                asteroide.MoverHaciaObjetivo(nave.ObtenerSprite().getPosition(), limiteY, limiteX, velocidadAsteroide);
+                asteroide.Dibujar(window);
             }
 
             // --- Agujero Negro central ---
@@ -723,10 +820,10 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             pAnterior = pActual;
 
             // Mostrar puntos en pantalla solo si la fuente se cargó correctamente
-            sf::Font fontMorallySerif;
-            if (fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf")) {
+            sf::Font fontRetroGaming;
+            if (fontRetroGaming.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
                 sf::Text textoPuntos;
-                textoPuntos.setFont(fontMorallySerif);
+                textoPuntos.setFont(fontRetroGaming);
                 textoPuntos.setString("Puntos: " + std::to_string(punto.getPuntos()));
                 textoPuntos.setCharacterSize(36);
                 textoPuntos.setFillColor(sf::Color::White);
@@ -820,6 +917,17 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 }
             }
 
+            // Actualizar y dibujar explosiones
+            for (auto it = explosiones.begin(); it != explosiones.end(); ) {
+                it->update();
+                it->draw(window);
+                if (it->isFinished()) {
+                    it = explosiones.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
             window.display();
         }
 
@@ -830,32 +938,54 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             std::string nombre = nombreJugador.empty() ? "JUGADOR" : nombreJugador;
             tabla.agregar(nombre, punto.getPuntos());
 
+            sf::Font fontRetro;
+            fontRetro.loadFromFile("assets/fonts/Retro Gaming.ttf");
             // Mostrar tabla de mejores puntajes
-            sf::Font fontTabla;
-            fontTabla.loadFromFile("assets/fonts/Morally Serif.otf");
             std::string tablaStr = "MEJORES PUNTAJES\n";
             int pos = 1;
             for (const auto& entrada : tabla.obtener()) {
                 tablaStr += std::to_string(pos++) + ". " + entrada.nombre + ": " + std::to_string(entrada.puntaje) + "\n";
             }
-            sf::Text textoTabla(tablaStr, fontTabla, 36);
-            textoTabla.setFillColor(sf::Color::White);
-            textoTabla.setStyle(sf::Text::Bold);
-            sf::FloatRect bounds = textoTabla.getLocalBounds();
-            textoTabla.setOrigin(bounds.width / 2, bounds.height / 2);
-            textoTabla.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f + 120);
-
-            sf::Font fontFin;
-            fontFin.loadFromFile("assets/arial.ttf");
+            // Texto de Game Over arriba
             sf::Text textoFin;
-            textoFin.setFont(fontFin);
+            textoFin.setFont(fontRetro);
             textoFin.setString("Juego terminado\nPuntaje: " + std::to_string(punto.getPuntos()) + "\nPresiona ESPACIO para volver a jugar");
             textoFin.setCharacterSize(40);
             textoFin.setFillColor(sf::Color::White);
             textoFin.setStyle(sf::Text::Bold);
             sf::FloatRect boundsFin = textoFin.getLocalBounds();
             textoFin.setOrigin(boundsFin.width / 2, boundsFin.height / 2);
-            textoFin.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
+            textoFin.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 200);
+
+            // Tabla de puntajes centrada en el medio
+            sf::Text textoTabla(tablaStr, fontRetro, 36);
+            textoTabla.setFillColor(sf::Color::White);
+            textoTabla.setStyle(sf::Text::Bold);
+            textoTabla.setOrigin(textoTabla.getLocalBounds().width / 2, textoTabla.getLocalBounds().height / 2);
+            textoTabla.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f + 40);
+
+            // --- Animación Calaca en Game Over (2 filas x 3 columnas, frame 204x245) ---
+            sf::Texture texCalaca;
+            texCalaca.loadFromFile("assets/images/Calaca_Sprite.png");
+            sf::Sprite calaca(texCalaca);
+            int calacaFrameWidth = 204;
+            int calacaFrameHeight = 245;
+            int calacaTotalFrames = 6;
+            int calacaFramesPorFila = 3;
+            float calacaTiempoPorFrame = 0.12f;
+            int calacaFrameActual = 0;
+            sf::Clock calacaRelojAnimacion;
+            float calacaScale = 1.5f;
+            calaca.setScale(calacaScale, calacaScale);
+            // Calaca abajo a la derecha
+            calaca.setPosition(window.getSize().x - calacaFrameWidth * calacaScale - 30, window.getSize().y - calacaFrameHeight * calacaScale - 30);
+
+            // --- Sonidos Game Over ---
+            sf::SoundBuffer bufferGO1, bufferGO2;
+            bufferGO1.loadFromFile("assets/music/Game_Over1.ogg");
+            bufferGO2.loadFromFile("assets/music/Game_Over2.ogg");
+            sf::Sound soundGO1(bufferGO1), soundGO2(bufferGO2);
+            bool go1Played = false, go2Played = false;
 
             while (window.isOpen()) {
                 sf::Event event;
@@ -863,9 +993,21 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     if (event.type == sf::Event::Closed)
                         window.close();
                     if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
-                        goto reiniciar_juego;
+                        goto inicio;
                 }
+                // Animar calaca
+                if (calacaRelojAnimacion.getElapsedTime().asSeconds() > calacaTiempoPorFrame) {
+                    calacaFrameActual = (calacaFrameActual + 1) % calacaTotalFrames;
+                    int fila = calacaFrameActual / calacaFramesPorFila;
+                    int columna = calacaFrameActual % calacaFramesPorFila;
+                    calaca.setTextureRect(sf::IntRect(columna * calacaFrameWidth, fila * calacaFrameHeight, calacaFrameWidth, calacaFrameHeight));
+                    calacaRelojAnimacion.restart();
+                }
+                // Reproducir sonidos Game Over1 y Game Over2 una vez, en orden
+                if (!go1Played) { soundGO1.play(); go1Played = true; }
+                else if (go1Played && !go2Played && soundGO1.getStatus() == sf::Sound::Stopped) { soundGO2.play(); go2Played = true; }
                 window.clear(sf::Color::Black);
+                window.draw(calaca);
                 window.draw(textoFin);
                 window.draw(textoTabla);
                 window.display();
@@ -885,17 +1027,39 @@ reiniciar_juego:
         agujeroVisible = true;
         agujeroScale = 0.3f;
         agujeroRot = 0.f;
-        continue;
+        // Reiniciar estado del juego
+        punto = Punto();
+        puntaje.setPuntos(0);
+        vidas = 3;
+        vida.setVidas(vidas);
+        oportunidad = Oportunidad(3, 3);
+        vida.setVidas(oportunidad.getVidas());
+        asteroides.clear();
+        cantidadAsteroides = 5;
+        relojAsteroides.restart();
+        asteroidesCreados = 0;
+        velocidadAsteroide = 0.6f;
+        ultimoPuntajeVel = 0;
+        vidaExtra = VidaExtra(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+        relojVidaExtra.restart();
+        vidaExtraActiva = false;
+        dobleDisparoItem = DobleDisparoItem(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+        relojDobleDisparo.restart();
+        dobleDisparoEnPantalla = false;
+        dobleDisparoActivo = false;
+        tiempoDobleDisparo = 0.0f;
+        // Volver a la selección de nave y armamento
+        goto inicio;
     }
 }
 
 // Prototipo de la función de selección de armamento
 int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
-    // Cargar fuente Morally Serif para la leyenda
-    sf::Font fontMorallySerif;
-    fontMorallySerif.loadFromFile("assets/fonts/Morally Serif.otf");
-    sf::Text leyenda("Favor de seleccionar su armamento", fontMorallySerif, 44);
-    leyenda.setFillColor(sf::Color(80, 160, 255)); // Azul
+    // Cargar fuente Retro Gaming para todos los textos
+    sf::Font fontRetro;
+    fontRetro.loadFromFile("assets/fonts/Retro Gaming.ttf");
+    sf::Text leyenda("Favor de seleccionar su armamento", fontRetro, 44);
+    leyenda.setFillColor(sf::Color(80, 160, 255));
     leyenda.setOutlineColor(sf::Color::Black);
     leyenda.setOutlineThickness(4.f);
     leyenda.setStyle(sf::Text::Bold);
@@ -903,18 +1067,28 @@ int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
     leyenda.setOrigin(leyendaBounds.width / 2, leyendaBounds.height / 2);
     leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220);
 
-    // Cargar imágenes de misiles
+    // Solo dos opciones: Misil y Laser
     sf::Texture texMisil, texLaser;
-    texMisil.loadFromFile("assets/images/Disparo.png");
-    texLaser.loadFromFile("assets/images/Disparo.png"); // Usa la misma imagen, puedes cambiarla si tienes otra
+    texMisil.loadFromFile("assets/images/Misil_Sprite.png");
+    texLaser.loadFromFile("assets/images/Laser_Sprite.png");
     sf::Sprite misil1(texMisil), misil2(texLaser);
-    misil1.setScale(3, 3);
-    misil2.setScale(3, 3);
-    misil1.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f);
-    misil2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f);
+    misil1.setScale(0.5f, 0.5f);
+    misil2.setScale(0.5f, 0.5f);
+    misil1.setPosition(window.getSize().x/2.f-200, window.getSize().y/2.f+40);
+    misil2.setPosition(window.getSize().x/2.f+100, window.getSize().y/2.f+40);
+
+    sf::Text txtMisil("Misil", fontRetro, 28);
+    sf::Text txtLaser("Laser", fontRetro, 28);
+    txtMisil.setFillColor(sf::Color::White);
+    txtLaser.setFillColor(sf::Color::White);
+    txtMisil.setOrigin(txtMisil.getLocalBounds().width/2, 0);
+    txtLaser.setOrigin(txtLaser.getLocalBounds().width/2, 0);
+    txtMisil.setPosition(misil1.getPosition().x + misil1.getGlobalBounds().width/2, misil1.getPosition().y + misil1.getGlobalBounds().height + 10);
+    txtLaser.setPosition(misil2.getPosition().x + misil2.getGlobalBounds().width/2, misil2.getPosition().y + misil2.getGlobalBounds().height + 10);
 
     int seleccion = 0; // 0 = Misil, 1 = Laser
     bool elegido = false;
+    sf::Clock animClock;
     while(window.isOpen() && !elegido) {
         sf::Event event;
         while(window.pollEvent(event)) {
@@ -925,11 +1099,49 @@ int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
                 if(event.key.code == sf::Keyboard::Enter) elegido = true;
             }
         }
-        misil1.setColor(seleccion==0 ? sf::Color::Green : sf::Color::White);
-        misil2.setColor(seleccion==1 ? sf::Color::Green : sf::Color::White);
+        float t = animClock.getElapsedTime().asSeconds();
+        float offset = std::sin(t * 2.5f) * 18.f;
+        leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220 + offset);
+        txtMisil.setPosition(misil1.getPosition().x + misil1.getGlobalBounds().width/2, misil1.getPosition().y + misil1.getGlobalBounds().height + 10 + offset/2.f);
+        txtLaser.setPosition(misil2.getPosition().x + misil2.getGlobalBounds().width/2, misil2.getPosition().y + misil2.getGlobalBounds().height + 10 + offset/2.f);
         window.clear(sf::Color::Black);
         window.draw(leyenda);
         window.draw(misil1); window.draw(misil2);
+        window.draw(txtMisil); window.draw(txtLaser);
+
+        // Efecto visual de selección mejorado: más pequeño, centrado y separados
+        float scaleSel = 0.55f, scaleNoSel = 0.42f;
+        int sizeSel = 30, sizeNoSel = 22;
+        float centerY = window.getSize().y / 2.f + 40;
+        float centerX = window.getSize().x / 2.f;
+        float offsetX = 140.f; // Más separación
+        if (seleccion == 0) {
+            misil1.setColor(sf::Color::Green);
+            txtMisil.setFillColor(sf::Color::Green);
+            misil1.setScale(scaleSel, scaleSel);
+            txtMisil.setCharacterSize(sizeSel);
+            misil2.setColor(sf::Color::White);
+            txtLaser.setFillColor(sf::Color::White);
+            misil2.setScale(scaleNoSel, scaleNoSel);
+            txtLaser.setCharacterSize(sizeNoSel);
+        } else {
+            misil1.setColor(sf::Color::White);
+            txtMisil.setFillColor(sf::Color::White);
+            misil1.setScale(scaleNoSel, scaleNoSel);
+            txtMisil.setCharacterSize(sizeNoSel);
+            misil2.setColor(sf::Color::Green);
+            txtLaser.setFillColor(sf::Color::Green);
+            misil2.setScale(scaleSel, scaleSel);
+            txtLaser.setCharacterSize(sizeSel);
+        }
+        // Posiciones centradas y separadas
+        misil1.setPosition(centerX - offsetX - misil1.getGlobalBounds().width/2, centerY);
+        misil2.setPosition(centerX + offsetX - misil2.getGlobalBounds().width/2, centerY);
+        txtMisil.setOrigin(txtMisil.getLocalBounds().width/2, 0);
+        txtLaser.setOrigin(txtLaser.getLocalBounds().width/2, 0);
+        txtMisil.setPosition(misil1.getPosition().x + misil1.getGlobalBounds().width/2, misil1.getPosition().y + misil1.getGlobalBounds().height + 8);
+        txtLaser.setPosition(misil2.getPosition().x + misil2.getGlobalBounds().width/2, misil2.getPosition().y + misil2.getGlobalBounds().height + 8);
+
         window.display();
     }
     return seleccion;
