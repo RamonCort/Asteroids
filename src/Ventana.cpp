@@ -39,23 +39,26 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
     // (Eliminado el bloque de carga de fuente y configuración de errorText)
 }
 
-void Ventana::mostrarInicio() {
+void Ventana::MostrarInicio() {
+    std::cout << "Iniciando pantalla de portada..." << std::endl;
+    
     // Cargar la imagen de portada
     sf::Texture portadaTexture;
     if (!portadaTexture.loadFromFile("assets/images/Portada.jpg")) {
         std::cerr << "No se pudo cargar la portada.\n";
         return;
     }
+    std::cout << "Portada cargada correctamente" << std::endl;
     sf::Sprite portadaSprite(portadaTexture);
     float scaleX = window.getSize().x / portadaSprite.getLocalBounds().width;
     float scaleY = window.getSize().y / portadaSprite.getLocalBounds().height;
-    portadaSprite.setScale(scaleX, scaleY);
-
-    // Cargar la imagen del título
+    portadaSprite.setScale(scaleX, scaleY);    // Cargar la imagen del título
     sf::Texture tituloTexture;
     if (!tituloTexture.loadFromFile("assets/images/Titulo.png")) {
         std::cerr << "No se pudo cargar la imagen del título: assets/images/Titulo.png\n";
         // Si falla, simplemente no se muestra el título
+    } else {
+        std::cout << "Título cargado correctamente" << std::endl;
     }
     sf::Sprite tituloSprite(tituloTexture);
     // Escalar el título para que sea visible y centrado
@@ -74,18 +77,26 @@ void Ventana::mostrarInicio() {
     playText.setOutlineThickness(4.f);
     sf::FloatRect playBounds = playText.getLocalBounds();
     playText.setOrigin(playBounds.width / 2, playBounds.height / 2);
-    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
-
-    sf::Clock animClock;
+    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);    sf::Clock animClock;
+    sf::Clock inicioTimer; // Timer para evitar salto automático
     float animSpeed = 2.5f;
+    bool puedePresionar = false; // Bandera para controlar cuándo se puede presionar
+    
+    std::cout << "Entrando al bucle de portada..." << std::endl;
 
     while (window.isOpen()) {
+        // Después de 1 segundo, permitir que se presione ENTER
+        if (!puedePresionar && inicioTimer.getElapsedTime().asSeconds() > 1.0f) {
+            puedePresionar = true;
+        }
+
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
-                window.close();
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter)
-                return; // Sale al presionar ENTER
+                window.close();            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter && puedePresionar) {
+                std::cout << "ENTER presionado, saliendo de portada..." << std::endl;
+                return; // Sale al presionar ENTER solo después del delay
+            }
         }
         // Animación: solo escala del sprite del título, sin cambio de color
         float t = animClock.getElapsedTime().asSeconds();
@@ -94,7 +105,19 @@ void Ventana::mostrarInicio() {
         tituloSprite.setColor(sf::Color::White); // Sin animación de color
         // Mantener centrado
         tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
-        tituloSprite.setPosition(window.getSize().x / 2.f, 200);
+        tituloSprite.setPosition(window.getSize().x / 2.f, 200);        // Cambiar el texto dependiendo de si se puede presionar o no
+        if (puedePresionar) {
+            playText.setString("PRESIONA ENTER PARA JUGAR");
+            playText.setFillColor(sf::Color(200, 200, 255));
+        } else {
+            playText.setString("CARGANDO...");
+            playText.setFillColor(sf::Color(150, 150, 150));
+        }
+        
+        // Recentrar el texto
+        sf::FloatRect bounds = playText.getLocalBounds();
+        playText.setOrigin(bounds.width / 2, bounds.height / 2);
+        playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
 
         window.clear();
         window.draw(portadaSprite);
@@ -256,7 +279,7 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     return nombre; // Return por defecto en caso de que la ventana se cierre
 }
 
-void Ventana::mostrar() {
+void Ventana::Mostrar() {
     inicio:
     // --- Variables de límites de ventana ---
     float limiteX = window.getSize().x;
@@ -309,11 +332,9 @@ void Ventana::mostrar() {
     fontPuntos.loadFromFile("assets/arial.ttf"); // Cargar la fuente aquí
     Puntaje puntaje(window.getSize().x);
     Vida vida;
-    int vidas = 3;
-    vida.setVidas(vidas);
-
+    int vidas = 3;    vida.EstablecerVidas(vidas);
     Oportunidad oportunidad(3, 3);
-    vida.setVidas(oportunidad.getVidas());
+    vida.EstablecerVidas(oportunidad.ObtenerVidas());
 
     std::vector<Asteroide> asteroides;
     int cantidadAsteroides = 5;
@@ -506,14 +527,14 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                 if (intersecta) {
                                     if (itAst->PuedeDestruirse()) {
                                         itAst = asteroides.erase(itAst);
-                                        punto.sumar(30);
+                                        punto.Sumar(30);
                                     } else {
                                         std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
                                         itAst = asteroides.erase(itAst);
                                         for (const auto& nuevoAst : nuevosAsteroides) {
                                             asteroides.push_back(nuevoAst);
                                         }
-                                        punto.sumar(10);
+                                        punto.Sumar(10);
                                     }
                                 } else {
                                     ++itAst;
@@ -553,14 +574,14 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                             if (intersecta) {
                                 if (itAst->PuedeDestruirse()) {
                                     itAst = asteroides.erase(itAst);
-                                    punto.sumar(30);
+                                    punto.Sumar(30);
                                 } else {
                                     std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
                                     itAst = asteroides.erase(itAst);
                                     for (const auto& nuevoAst : nuevosAsteroides) {
                                         asteroides.push_back(nuevoAst);
                                     }
-                                    punto.sumar(10);
+                                    punto.Sumar(10);
                                 }
                             } else {
                                 ++itAst;
@@ -578,13 +599,12 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
 
             // --- COLISIONES ASTEROIDE-NAVE ---
             for (auto& ast : asteroides) {
-                if (!invulnerable && ast.ColisionarConNave(nave)) {
-                    oportunidad.perderVida();
-                    vida.setVidas(oportunidad.getVidas());
+                if (!invulnerable && ast.ColisionarConNave(nave)) {                    oportunidad.PerderVida();
+                    vida.EstablecerVidas(oportunidad.ObtenerVidas());
                     ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
                     ast.y = 0;
                     ast.sprite.setPosition(ast.x, ast.y);
-                    if (oportunidad.sinOportunidades()) {
+                    if (oportunidad.SinOportunidades()) {
                         gameOver = true;
                         break;
                     }
@@ -619,7 +639,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                             // Asteroide pequeño, se destruye completamente
                             itAst = asteroides.erase(itAst);
                             asteroideEliminado = true;
-                            punto.sumar(30); // Más puntos por destruir completamente
+                            punto.Sumar(30); // Más puntos por destruir completamente
                         } else {
                             // Asteroide grande o mediano, se divide
                             std::vector<Asteroide> nuevosAsteroides = itAst->Dividir();
@@ -631,7 +651,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                 asteroides.push_back(nuevoAst);
                             }
                             
-                            punto.sumar(10); // Puntos por dividir
+                            punto.Sumar(10); // Puntos por dividir
                         }
                         
                         // Crear explosión en la posición del asteroide destruido
@@ -659,7 +679,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     ++it;
                 }
             }            // Aumentar velocidad de los asteroides cada 90 puntos en un 20%
-            int puntosActuales = punto.getPuntos();
+            int puntosActuales = punto.ObtenerPuntos();
             if (puntosActuales >= 90 && (puntosActuales / 90) > (ultimoPuntajeVel / 90)) {
                 velocidadAsteroide *= 1.2f;
                 ultimoPuntajeVel = puntosActuales;
@@ -703,9 +723,8 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     agujeroSprite.setOrigin(agujeroTexture.getSize().x/2, agujeroTexture.getSize().y/2);
                     agujeroCargado = true;
                 }
-            }
-            // El agujero negro aparece a los 100 puntos
-            if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
+            }            // El agujero negro aparece a los 100 puntos
+            if (agujeroCargado && agujeroVisible && punto.ObtenerPuntos() >= 600) {
                 agujeroScale += 0.0005f;
                 agujeroRot += 1.0f;
                 agujeroSprite.setScale(agujeroScale, agujeroScale);
@@ -734,7 +753,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 }
             }
             // --- EFECTO DE ATRACCIÓN DEL AGUJERO NEGRO ---
-            if (agujeroCargado && agujeroVisible && punto.getPuntos() >= 100) {
+            if (agujeroCargado && agujeroVisible && punto.ObtenerPuntos() >= 600) {
                 sf::Vector2f agujeroCentro = agujeroSprite.getPosition();
                 float escalaAgujero = agujeroScale; // Entre 0.3 y lo que crezca
                 float factorFuerza = std::max(1.0f, escalaAgujero * 2.5f); // Aumenta con el tamaño
@@ -789,13 +808,13 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 }
                 // Atracción para la vida extra
                 if (vidaExtraActiva) {
-                    sf::Vector2f vidaPos(vidaExtra.getX(), vidaExtra.getY());
+                    sf::Vector2f vidaPos(vidaExtra.ObtenerX(), vidaExtra.ObtenerY());
                     sf::Vector2f dirVida = agujeroCentro - vidaPos;
                     float distVida = std::sqrt(dirVida.x * dirVida.x + dirVida.y * dirVida.y);
                     if (distVida > 1.f) {
                         dirVida /= distVida;
                         float fuerzaVida = 0.12f * std::min(300.f, distVida) / 300.f * factorFuerza;
-                        vidaExtra.setPos(vidaPos.x + dirVida.x * fuerzaVida, vidaPos.y + dirVida.y * fuerzaVida);
+                        vidaExtra.EstablecerPosicion(vidaPos.x + dirVida.x * fuerzaVida, vidaPos.y + dirVida.y * fuerzaVida);
                     }
                     float radioColisionVida = agujeroSprite.getGlobalBounds().width * 0.15f;
                     if (distVida < radioColisionVida) {
@@ -815,16 +834,14 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Sumar puntos solo una vez por pulsación de 'P'
             bool pActual = sf::Keyboard::isKeyPressed(sf::Keyboard::P);
             if (pActual && !pAnterior) {
-                punto.sumar();
+                punto.Sumar();
             }
-            pAnterior = pActual;
-
-            // Mostrar puntos en pantalla solo si la fuente se cargó correctamente
+            pAnterior = pActual;            // Mostrar puntos en pantalla solo si la fuente se cargó correctamente
             sf::Font fontRetroGaming;
             if (fontRetroGaming.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
                 sf::Text textoPuntos;
                 textoPuntos.setFont(fontRetroGaming);
-                textoPuntos.setString("Puntos: " + std::to_string(punto.getPuntos()));
+                textoPuntos.setString("Puntos: " + std::to_string(punto.ObtenerPuntos()));
                 textoPuntos.setCharacterSize(36);
                 textoPuntos.setFillColor(sf::Color::White);
                 // Posicionar en la esquina superior derecha
@@ -835,8 +852,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 // Si falla la fuente, mostrar con Arial como respaldo
                 if (fuenteCargada) {
                     sf::Text textoPuntos;
-                    textoPuntos.setFont(fontPuntos);
-                    textoPuntos.setString("Puntos: " + std::to_string(punto.getPuntos()));
+                    textoPuntos.setFont(fontPuntos);                    textoPuntos.setString("Puntos: " + std::to_string(punto.ObtenerPuntos()));
                     textoPuntos.setCharacterSize(32);
                     textoPuntos.setFillColor(sf::Color::White);
                     textoPuntos.setPosition(20, 20);
@@ -844,20 +860,19 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 }
             }
 
-            vida.draw(window);
+            vida.Dibujar(window);
             // Mostrar oportunidades restantes
             sf::Font fontOpor;
             if (fontOpor.loadFromFile("assets/arial.ttf")) {
                 sf::Text textoOpor;
                 textoOpor.setFont(fontOpor);
-                textoOpor.setString("Oportunidades: " + std::to_string(oportunidad.getOportunidades()));
+                textoOpor.setString("Oportunidades: " + std::to_string(oportunidad.ObtenerOportunidades()));
                 textoOpor.setCharacterSize(28);
                 textoOpor.setFillColor(sf::Color::White);
                 textoOpor.setPosition(20, 80);
                 window.draw(textoOpor);
-            }
-            puntaje.setPuntos(punto.getPuntos());
-            puntaje.draw(window);
+            }            puntaje.EstablecerPuntos(punto.ObtenerPuntos());
+            puntaje.Dibujar(window);
 
             // Lógica de aparición de vida extra cada 10 segundos (más frecuente)
             if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 10.0f) {
@@ -867,16 +882,15 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             }
 
             // Dibujar y mover vida extra si está activa
-            if (vidaExtraActiva) {
-                vidaExtra.mover(limiteY, limiteX, 1.0f);
-                vidaExtra.dibujar(window);
+            if (vidaExtraActiva) {                vidaExtra.Mover(limiteY, limiteX, 1.0f);
+                vidaExtra.Dibujar(window);
                 // Colisión con nave
-                if (vidaExtra.colision(nave)) {
-                    oportunidad.sumarVida(); // Suma solo una vida
-                    vida.setVidas(oportunidad.getVidas());
+                if (vidaExtra.Colisionar(nave)) {
+                    oportunidad.SumarVida(); // Suma solo una vida
+                    vida.EstablecerVidas(oportunidad.ObtenerVidas());
                     vidaExtraActiva = false;
                 }
-                if (vidaExtra.getY() > limiteY) {
+                if (vidaExtra.ObtenerY() > limiteY) {
                     vidaExtraActiva = false;
                 }
             }
@@ -891,22 +905,21 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             }
 
             // Lógica de aparición de doble disparo cada 18 segundos
-            if (!dobleDisparoEnPantalla && !dobleDisparoActivo && relojDobleDisparo.getElapsedTime().asSeconds() >= 18.0f) {
-                dobleDisparoItem.reiniciar(limiteX);
+            if (!dobleDisparoEnPantalla && !dobleDisparoActivo && relojDobleDisparo.getElapsedTime().asSeconds() >= 18.0f) {                dobleDisparoItem.Reiniciar(limiteX);
                 dobleDisparoEnPantalla = true;
                 relojDobleDisparo.restart();
             }
             // Dibujar y mover doble disparo si está en pantalla
             if (dobleDisparoEnPantalla) {
-                dobleDisparoItem.mover(limiteY, limiteX, 1.0f);
-                dobleDisparoItem.dibujar(window);
-                if (dobleDisparoItem.colision(nave.ObtenerSprite())) {
+                dobleDisparoItem.Mover(limiteY, limiteX, 1.0f);
+                dobleDisparoItem.Dibujar(window);
+                if (dobleDisparoItem.Colisionar(nave.ObtenerSprite())) {
                     dobleDisparoEnPantalla = false;
                     dobleDisparoActivo = true;
                     tiempoDobleDisparo = 5.0f; // 5 segundos de doble disparo
                     relojDobleDisparo.restart();
                 }
-                if (dobleDisparoItem.getY() > limiteY) {
+                if (dobleDisparoItem.ObtenerY() > limiteY) {
                     dobleDisparoEnPantalla = false;
                 }
             }
@@ -915,13 +928,11 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 if (relojDobleDisparo.getElapsedTime().asSeconds() >= tiempoDobleDisparo) {
                     dobleDisparoActivo = false;
                 }
-            }
-
-            // Actualizar y dibujar explosiones
+            }            // Actualizar y dibujar explosiones
             for (auto it = explosiones.begin(); it != explosiones.end(); ) {
-                it->update();
-                it->draw(window);
-                if (it->isFinished()) {
+                it->Actualizar();
+                it->Dibujar(window);
+                if (it->EstaTerminada()) {
                     it = explosiones.erase(it);
                 } else {
                     ++it;
@@ -936,20 +947,20 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Guardar puntaje
             TablaDePuntaje tabla("mejores_puntajes.txt");
             std::string nombre = nombreJugador.empty() ? "JUGADOR" : nombreJugador;
-            tabla.agregar(nombre, punto.getPuntos());
+            tabla.Agregar(nombre, punto.ObtenerPuntos());
 
             sf::Font fontRetro;
             fontRetro.loadFromFile("assets/fonts/Retro Gaming.ttf");
             // Mostrar tabla de mejores puntajes
             std::string tablaStr = "MEJORES PUNTAJES\n";
             int pos = 1;
-            for (const auto& entrada : tabla.obtener()) {
+            for (const auto& entrada : tabla.Obtener()) {
                 tablaStr += std::to_string(pos++) + ". " + entrada.nombre + ": " + std::to_string(entrada.puntaje) + "\n";
             }
             // Texto de Game Over arriba
             sf::Text textoFin;
             textoFin.setFont(fontRetro);
-            textoFin.setString("Juego terminado\nPuntaje: " + std::to_string(punto.getPuntos()) + "\nPresiona ESPACIO para volver a jugar");
+            textoFin.setString("Juego terminado\nPuntaje: " + std::to_string(punto.ObtenerPuntos()) + "\nPresiona ESPACIO para volver a jugar");
             textoFin.setCharacterSize(40);
             textoFin.setFillColor(sf::Color::White);
             textoFin.setStyle(sf::Text::Bold);
@@ -1029,11 +1040,11 @@ reiniciar_juego:
         agujeroRot = 0.f;
         // Reiniciar estado del juego
         punto = Punto();
-        puntaje.setPuntos(0);
+        puntaje.EstablecerPuntos(0);
         vidas = 3;
-        vida.setVidas(vidas);
+        vida.EstablecerVidas(vidas);
         oportunidad = Oportunidad(3, 3);
-        vida.setVidas(oportunidad.getVidas());
+        vida.EstablecerVidas(oportunidad.ObtenerVidas());
         asteroides.clear();
         cantidadAsteroides = 5;
         relojAsteroides.restart();

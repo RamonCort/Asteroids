@@ -16,11 +16,11 @@ Vida::Vida() : width(200), height(60) {
     texto.setString("Vidas : 3");
 }
 
-void Vida::setVidas(int vidas) {
+void Vida::EstablecerVidas(int vidas) {
     texto.setString("Vidas : " + std::to_string(vidas));
 }
 
-void Vida::draw(sf::RenderWindow& window) {
+void Vida::Dibujar(sf::RenderWindow& window) {
     window.draw(box);
     // Dibujar corazones como vidas
     static sf::Texture corazonTexture;

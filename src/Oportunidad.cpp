@@ -1,16 +1,16 @@
 // Agrega el include correcto para el método miembro
 #include "../include/Oportunidad.hpp"
-void Oportunidad::sumarVida() {
+
+void Oportunidad::SumarVida() {
     if (vidas < vidasPorOportunidad) {
         vidas++;
     }
 }
-#include "../include/Oportunidad.hpp"
 
 Oportunidad::Oportunidad(int oportunidades, int vidasPorOportunidad)
     : oportunidades(oportunidades), vidas(vidasPorOportunidad), vidasPorOportunidad(vidasPorOportunidad) {}
 
-void Oportunidad::perderVida() {
+void Oportunidad::PerderVida() {
     vidas--;
     if (vidas <= 0) {
         oportunidades--;
@@ -20,19 +20,19 @@ void Oportunidad::perderVida() {
     }
 }
 
-int Oportunidad::getVidas() const {
+int Oportunidad::ObtenerVidas() const {
     return vidas;
 }
 
-int Oportunidad::getOportunidades() const {
+int Oportunidad::ObtenerOportunidades() const {
     return oportunidades;
 }
 
-bool Oportunidad::sinOportunidades() const {
+bool Oportunidad::SinOportunidades() const {
     return oportunidades <= 0;
 }
 
-void Oportunidad::reiniciar() {
+void Oportunidad::Reiniciar() {
     oportunidades = 3;
     vidas = vidasPorOportunidad;
 }

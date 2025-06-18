@@ -29,7 +29,7 @@ Explosion::Explosion(float x, float y)
     relojAnimacion.restart();
 }
 
-void Explosion::update() {
+void Explosion::Actualizar() {
     if (finished) return;
     if (relojAnimacion.getElapsedTime().asSeconds() > tiempoPorFrame) {
         frameActual++;
@@ -43,10 +43,10 @@ void Explosion::update() {
     }
 }
 
-void Explosion::draw(sf::RenderWindow& window) {
+void Explosion::Dibujar(sf::RenderWindow& window) {
     if (!finished) window.draw(sprite);
 }
 
-bool Explosion::isFinished() const {
+bool Explosion::EstaTerminada() const {
     return finished;
 }

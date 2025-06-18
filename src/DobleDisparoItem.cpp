@@ -14,10 +14,10 @@ DobleDisparoItem::DobleDisparoItem(float x_, float y_) : x(x_), y(y_) {
     relojCambioDireccion.restart();
 }
 
-void DobleDisparoItem::mover(float limiteY, float limiteX, float velocidadY) {
+void DobleDisparoItem::Mover(float limiteY, float limiteX, float velocidadY) {
     y += velocidadY;
     if (y > limiteY) {
-        reiniciar(limiteX);
+        Reiniciar(limiteX);
     }
     sprite.setPosition(x, y);
     // Animar rotación y cambio de dirección
@@ -30,19 +30,19 @@ void DobleDisparoItem::mover(float limiteY, float limiteX, float velocidadY) {
     sprite.setRotation(angulo);
 }
 
-void DobleDisparoItem::dibujar(sf::RenderWindow& window) {
+void DobleDisparoItem::Dibujar(sf::RenderWindow& window) {
     sprite.setPosition(x, y);
     window.draw(sprite);
 }
 
-bool DobleDisparoItem::colision(sf::Sprite& naveSprite) {
+bool DobleDisparoItem::Colisionar(sf::Sprite& naveSprite) {
     return sprite.getGlobalBounds().intersects(naveSprite.getGlobalBounds());
 }
 
-void DobleDisparoItem::reiniciar(float limiteX) {
+void DobleDisparoItem::Reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
     sprite.setPosition(x, y);
 }
 
-float DobleDisparoItem::getY() const { return y; }
+float DobleDisparoItem::ObtenerY() const { return y; }

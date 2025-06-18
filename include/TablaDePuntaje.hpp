@@ -9,12 +9,10 @@ public:
         std::string nombre;
         int puntaje;
     };
-    TablaDePuntaje(const std::string& archivo);
-    void agregar(const std::string& nombre, int puntaje);
-    const std::vector<Entrada>& obtener() const;
+    TablaDePuntaje(const std::string& archivo);    void Agregar(const std::string& nombre, int puntaje);
+    const std::vector<Entrada>& Obtener() const;
 private:
     std::string archivo_;
-    std::vector<Entrada> entradas;
-    void cargar();
-    void guardar();
+    std::vector<Entrada> entradas;    void Cargar();
+    void Guardar();
 };

@@ -5,23 +5,23 @@
 #include <algorithm>
 
 TablaDePuntaje::TablaDePuntaje(const std::string& archivo) : archivo_(archivo) {
-    cargar();
+    Cargar();
 }
 
-void TablaDePuntaje::agregar(const std::string& nombre, int puntaje) {
+void TablaDePuntaje::Agregar(const std::string& nombre, int puntaje) {
     entradas.push_back({nombre, puntaje});
     std::sort(entradas.begin(), entradas.end(), [](const Entrada& a, const Entrada& b) {
         return b.puntaje < a.puntaje;
     });
     if (entradas.size() > 5) entradas.resize(5);
-    guardar();
+    Guardar();
 }
 
-const std::vector<TablaDePuntaje::Entrada>& TablaDePuntaje::obtener() const {
+const std::vector<TablaDePuntaje::Entrada>& TablaDePuntaje::Obtener() const {
     return entradas;
 }
 
-void TablaDePuntaje::cargar() {
+void TablaDePuntaje::Cargar() {
     entradas.clear();
     std::ifstream f(archivo_);
     std::string nombre;
@@ -31,7 +31,7 @@ void TablaDePuntaje::cargar() {
     }
 }
 
-void TablaDePuntaje::guardar() {
+void TablaDePuntaje::Guardar() {
     std::ofstream f(archivo_);
     for (const auto& e : entradas) {
         f << e.nombre << " " << e.puntaje << "\n";

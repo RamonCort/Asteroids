@@ -4,9 +4,8 @@
 
 class Puntaje {
 public:
-    Puntaje(float windowWidth);
-    void setPuntos(int puntos);
-    void draw(sf::RenderWindow& window);
+    Puntaje(float windowWidth);    void EstablecerPuntos(int puntos);
+    void Dibujar(sf::RenderWindow& window);
 private:
     sf::RectangleShape box;
     sf::Font font;

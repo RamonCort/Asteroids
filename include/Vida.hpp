@@ -4,9 +4,8 @@
 
 class Vida {
 public:
-    Vida();
-    void setVidas(int vidas);
-    void draw(sf::RenderWindow& window);
+    Vida();    void EstablecerVidas(int vidas);
+    void Dibujar(sf::RenderWindow& window);
 private:
     sf::RectangleShape box;
     sf::Font font;

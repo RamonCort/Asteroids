@@ -3,14 +3,12 @@
 
 class DobleDisparoItem {
 public:
-    DobleDisparoItem(float x, float y);
-    void mover(float limiteY, float limiteX, float velocidadY = 1.0f);
-    void dibujar(sf::RenderWindow& window);
-    bool colision(sf::Sprite& naveSprite);
-    void reiniciar(float limiteX);
-    float getY() const;
-    float getX() const { return x; }
-    void setPos(float nx, float ny) { x = nx; y = ny; sprite.setPosition(x, y); }
+    DobleDisparoItem(float x, float y);    void Mover(float limiteY, float limiteX, float velocidadY = 1.0f);
+    void Dibujar(sf::RenderWindow& window);
+    bool Colisionar(sf::Sprite& naveSprite);
+    void Reiniciar(float limiteX);    float ObtenerY() const;
+    float ObtenerX() const { return x; }
+    void EstablecerPosicion(float nx, float ny) { x = nx; y = ny; sprite.setPosition(x, y); }
 private:
     float x, y;
     sf::Texture textura;

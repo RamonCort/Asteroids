@@ -2,14 +2,14 @@
 
 Punto::Punto() : puntos(0) {}
 
-void Punto::sumar() {
+void Punto::Sumar() {
     puntos += 10;
 }
 
-void Punto::sumar(int valor) {
+void Punto::Sumar(int valor) {
     puntos += valor;
 }
 
-int Punto::getPuntos() const {
+int Punto::ObtenerPuntos() const {
     return puntos;
 }

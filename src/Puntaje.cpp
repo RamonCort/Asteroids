@@ -21,11 +21,11 @@ Puntaje::Puntaje(float windowWidth) : width(200), height(60) {
     texto.setPosition(box.getPosition().x + 20, box.getPosition().y + (box.getSize().y - textBounds.height) / 2 - 5);
 }
 
-void Puntaje::setPuntos(int puntos) {
+void Puntaje::EstablecerPuntos(int puntos) {
     texto.setString("Puntaje : " + std::to_string(puntos));
 }
 
-void Puntaje::draw(sf::RenderWindow& window) {
+void Puntaje::Dibujar(sf::RenderWindow& window) {
     window.draw(box);
     window.draw(texto);
 }

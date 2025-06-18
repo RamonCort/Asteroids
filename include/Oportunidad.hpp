@@ -3,13 +3,12 @@
 
 class Oportunidad {
 public:
-    Oportunidad(int oportunidades = 3, int vidasPorOportunidad = 3);
-    void perderVida();
-    int getVidas() const;
-    int getOportunidades() const;
-    bool sinOportunidades() const;
-    void reiniciar();
-    void sumarVida();
+    Oportunidad(int oportunidades = 3, int vidasPorOportunidad = 3);    void PerderVida();
+    int ObtenerVidas() const;
+    int ObtenerOportunidades() const;
+    bool SinOportunidades() const;
+    void Reiniciar();
+    void SumarVida();
 private:
     int oportunidades;
     int vidas;

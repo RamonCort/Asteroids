@@ -20,7 +20,7 @@ VidaExtra::VidaExtra(float x_, float y_) : x(x_), y(y_) {
     relojCambioDireccion.restart();
 }
 
-void VidaExtra::mover(float limiteY, float limiteX, float velocidadY) {
+void VidaExtra::Mover(float limiteY, float limiteX, float velocidadY) {
     y += velocidadY;
     if (y > limiteY) {
         Reiniciar(limiteX);
@@ -37,12 +37,12 @@ void VidaExtra::mover(float limiteY, float limiteX, float velocidadY) {
     spriteAnimado.setRotation(angulo);
 }
 
-void VidaExtra::dibujar(sf::RenderWindow& window) {
+void VidaExtra::Dibujar(sf::RenderWindow& window) {
     spriteAnimado.setPosition(x, y);
     window.draw(spriteAnimado);
 }
 
-bool VidaExtra::colision(Nave& nave) {
+bool VidaExtra::Colisionar(Nave& nave) {
     if (spriteAnimado.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }
@@ -56,4 +56,4 @@ void VidaExtra::Reiniciar(float limiteX) {
     spriteAnimado.setPosition(x, y);
 }
 
-float VidaExtra::getY() const { return y; }
+float VidaExtra::ObtenerY() const { return y; }

@@ -3,10 +3,9 @@
 
 class Explosion {
 public:
-    Explosion(float x, float y);
-    void update();
-    void draw(sf::RenderWindow& window);
-    bool isFinished() const;
+    Explosion(float x, float y);    void Actualizar();
+    void Dibujar(sf::RenderWindow& window);
+    bool EstaTerminada() const;
 
 private:
     static sf::Texture texture;

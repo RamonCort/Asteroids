@@ -2,10 +2,9 @@
 
 class Punto {
 public:
-    Punto();
-    void sumar();
-    void sumar(int valor); // Nueva función para sumar puntos variables
-    int getPuntos() const;
+    Punto();    void Sumar();
+    void Sumar(int valor); // Nueva función para sumar puntos variables
+    int ObtenerPuntos() const;
 private:
     int puntos;
 };
