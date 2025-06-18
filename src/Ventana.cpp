@@ -387,10 +387,8 @@ void Ventana::mostrar() {
 
             margen.Dibujar(window);
             nave.Mover(window);
-            margen.Limitar(nave);
-
-            // Disparo de misil o láser
-            bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
+            margen.Limitar(nave);            // Disparo de misil o láser (Espacio o click izquierdo del mouse)
+            bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Mouse::isButtonPressed(sf::Mouse::Left);
             static bool dobleDisparoHabilitado = false;
             // Control de tiempo de doble disparo
             if (tiempoDobleDisparo > 0.f) {
