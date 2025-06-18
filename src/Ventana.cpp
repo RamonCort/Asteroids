@@ -11,6 +11,7 @@
 #include "../include/Vida.hpp"
 #include "../include/VidaExtra.hpp"
 #include "../include/EscudoItem.hpp"
+#include "../include/DobleDisparoItem.hpp"
 #include <vector>
 #include "../include/Asteroide.hpp"
 #include <cmath> // Nueva inclusión para std::sin
@@ -26,6 +27,13 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
     } else {
         sprite.setTexture(texture);
         sprite.setPosition(100, 100);
+    }
+    // Inicializar y reproducir música de fondo
+    if (music.openFromFile("assets/music/videoplayback.ogg")) {
+        music.setLoop(true);
+        music.play();
+    } else {
+        std::cerr << "No se pudo cargar la música de fondo: assets/music/videoplayback.ogg" << std::endl;
     }
     // (Eliminado el bloque de carga de fuente y configuración de errorText)
 }
@@ -323,6 +331,13 @@ void Ventana::mostrar() {
         sf::Clock relojVidaExtra;
         bool vidaExtraActiva = false;
 
+        // Doble disparo
+        DobleDisparoItem dobleDisparoItem(static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20), 0);
+        sf::Clock relojDobleDisparo;
+        bool dobleDisparoEnPantalla = false;
+        bool dobleDisparoActivo = false;
+        float tiempoDobleDisparo = 0.0f; // Al iniciar, el poder está desactivado
+
         for (int i = 0; i < cantidadAsteroides; ++i) {
             float ax = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
             float ay = static_cast<float>(rand() % 100);
@@ -331,17 +346,6 @@ void Ventana::mostrar() {
 
         bool pAnterior = false;
         bool gameOver = false;
-
-        // Música (opcional, solo la primera vez)
-        static bool musicaIniciada = false;
-        static sf::Music music;
-        if (!musicaIniciada) {
-            if (music.openFromFile("assets/music/videoplayback.ogg")) {
-                music.setLoop(true);
-                music.play();
-            }
-            musicaIniciada = true;
-        }
 
         // --- Variables estáticas del fondo y agujero negro para todo el método
         static sf::Texture agujeroTexture;
@@ -387,12 +391,33 @@ void Ventana::mostrar() {
 
             // Disparo de misil o láser
             bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
+            static bool dobleDisparoHabilitado = false;
+            // Control de tiempo de doble disparo
+            if (tiempoDobleDisparo > 0.f) {
+                tiempoDobleDisparo -= 1.f/60.f; // Aproximado a 60 FPS
+                dobleDisparoHabilitado = true;
+            } else {
+                dobleDisparoHabilitado = false;
+            }
             if (armamentoSeleccionado == 0) { // Misil
                 if (disparoActual && !disparoAnterior) {
                     sf::Vector2f navePos = nave.ObtenerSprite().getPosition();
-                    float misilX = navePos.x;
-                    float misilY = navePos.y - nave.ObtenerSprite().getGlobalBounds().height / 2;
-                    misiles.emplace_back(misilX, misilY);
+                    float angulo = nave.ObtenerSprite().getRotation();
+                    sf::FloatRect bounds = nave.ObtenerSprite().getGlobalBounds();
+                    float ancho = bounds.width * nave.ObtenerSprite().getScale().x;
+                    float offset = ancho * 0.28f; // Separación lateral (ajustable)
+                    float rad = (angulo - 90.f) * 3.14159265f / 180.f;
+                    float cosA = std::cos(rad);
+                    float sinA = std::sin(rad);
+                    sf::Vector2f lateral(-sinA, cosA);
+                    if (dobleDisparoHabilitado) {
+                        sf::Vector2f posIzq = navePos + lateral * offset;
+                        sf::Vector2f posDer = navePos - lateral * offset;
+                        misiles.emplace_back(posIzq.x, posIzq.y, angulo);
+                        misiles.emplace_back(posDer.x, posDer.y, angulo);
+                    } else {
+                        misiles.emplace_back(navePos.x, navePos.y - bounds.height/2, angulo);
+                    }
                     sonidoLaser.play();
                 }
             } else { // Láser
@@ -678,8 +703,8 @@ void Ventana::mostrar() {
             puntaje.setPuntos(punto.getPuntos());
             puntaje.draw(window);
 
-            // Lógica de aparición de vida extra cada 20 segundos
-            if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 20.0f) {
+            // Lógica de aparición de vida extra cada 10 segundos (más frecuente)
+            if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 10.0f) {
                 vidaExtra.Reiniciar(limiteX);
                 vidaExtraActiva = true;
                 relojVidaExtra.restart();
@@ -697,6 +722,42 @@ void Ventana::mostrar() {
                 }
                 if (vidaExtra.getY() > limiteY) {
                     vidaExtraActiva = false;
+                }
+            }
+
+            // Lógica de activación de doble disparo
+            if (dobleDisparoActivo) {
+                // nave.ActivarDobleDisparo(); // Eliminado: no existe
+                if (relojDobleDisparo.getElapsedTime().asSeconds() >= tiempoDobleDisparo) {
+                    dobleDisparoActivo = false;
+                    // nave.DesactivarDobleDisparo(); // Eliminado: no existe
+                }
+            }
+
+            // Lógica de aparición de doble disparo cada 18 segundos
+            if (!dobleDisparoEnPantalla && !dobleDisparoActivo && relojDobleDisparo.getElapsedTime().asSeconds() >= 18.0f) {
+                dobleDisparoItem.reiniciar(limiteX);
+                dobleDisparoEnPantalla = true;
+                relojDobleDisparo.restart();
+            }
+            // Dibujar y mover doble disparo si está en pantalla
+            if (dobleDisparoEnPantalla) {
+                dobleDisparoItem.mover(limiteY, limiteX, 1.0f);
+                dobleDisparoItem.dibujar(window);
+                if (dobleDisparoItem.colision(nave.ObtenerSprite())) {
+                    dobleDisparoEnPantalla = false;
+                    dobleDisparoActivo = true;
+                    tiempoDobleDisparo = 5.0f; // 5 segundos de doble disparo
+                    relojDobleDisparo.restart();
+                }
+                if (dobleDisparoItem.getY() > limiteY) {
+                    dobleDisparoEnPantalla = false;
+                }
+            }
+            // Control de tiempo de poder doble disparo
+            if (dobleDisparoActivo) {
+                if (relojDobleDisparo.getElapsedTime().asSeconds() >= tiempoDobleDisparo) {
+                    dobleDisparoActivo = false;
                 }
             }
 

@@ -8,6 +8,12 @@ EscudoItem::EscudoItem(float x_, float y_) : x(x_), y(y_) {
     shape.setOutlineColor(sf::Color::White);
     shape.setOutlineThickness(3);
     shape.setPosition(x, y);
+    // Cargar sprite del escudo
+    spriteTexture.loadFromFile("assets/images/Escudo.item.png");
+    spriteEscudo.setTexture(spriteTexture);
+    spriteEscudo.setOrigin(spriteTexture.getSize().x/2, spriteTexture.getSize().y/2);
+    spriteEscudo.setScale(0.55f, 0.55f); // Un poco más grande
+    spriteEscudo.setPosition(x, y);
 }
 
 void EscudoItem::Mover(float limiteY, float limiteX, float velocidadY) {
@@ -16,15 +22,16 @@ void EscudoItem::Mover(float limiteY, float limiteX, float velocidadY) {
         Reiniciar(limiteX);
     }
     shape.setPosition(x, y);
+    spriteEscudo.setPosition(x, y);
 }
 
 void EscudoItem::Dibujar(sf::RenderWindow& window) {
-    shape.setPosition(x, y);
-    window.draw(shape);
+    spriteEscudo.setPosition(x, y);
+    window.draw(spriteEscudo);
 }
 
 bool EscudoItem::Colisionar(Nave& nave) {
-    if (shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
+    if (spriteEscudo.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }
     return false;
@@ -34,6 +41,7 @@ void EscudoItem::Reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
     shape.setPosition(x, y);
+    spriteEscudo.setPosition(x, y);
 }
 
 float EscudoItem::ObtenerY() const {

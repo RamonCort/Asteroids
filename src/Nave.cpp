@@ -1,5 +1,6 @@
 #include "../include/Nave.hpp"
 #include <iostream>
+#include <cmath> // Incluir cmath para std::atan2
 
 Nave::Nave(float x, float y, const std::string& ruta) {
     if (!texture.loadFromFile(ruta)) {
@@ -15,15 +16,21 @@ Nave::Nave(float x, float y, const std::string& ruta) {
 }
 
 void Nave::Mover(const sf::RenderWindow& window) {
-    // Movimiento libre, sin límites de ventana
+    sf::Vector2f movimiento(0.f, 0.f);
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-        sprite.move(-velocidad, 0);
+        movimiento.x -= velocidad;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-        sprite.move(velocidad, 0);
+        movimiento.x += velocidad;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-        sprite.move(0, -velocidad);
+        movimiento.y -= velocidad;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-        sprite.move(0, velocidad);
+        movimiento.y += velocidad;
+    sprite.move(movimiento);
+    // Rotar la nave según la dirección de movimiento
+    if (movimiento.x != 0.f || movimiento.y != 0.f) {
+        float angulo = std::atan2(movimiento.y, movimiento.x) * 180.f / 3.14159265f + 90.f;
+        sprite.setRotation(angulo);
+    }
 }
 
 void Nave::Dibujar(sf::RenderWindow& window) {

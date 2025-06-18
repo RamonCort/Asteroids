@@ -19,4 +19,10 @@ private:
     sf::CircleShape shape;
     sf::Texture corazonTexture;
     sf::Sprite corazonSprite;
+    sf::Texture spriteTexture;
+    sf::Sprite spriteAnimado;
+    float angulo = 0.f;
+    float velocidadRotacion = 2.f;
+    int direccionRotacion = 1;
+    sf::Clock relojCambioDireccion;
 };

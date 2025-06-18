@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> // <-- Incluye el encabezado de Audio
 #include <string>
 
 class Ventana {
@@ -14,4 +15,5 @@ private:
     sf::Font font;
     sf::Text errorText;
     bool fontLoaded;
+    sf::Music music; // Música de fondo
 };

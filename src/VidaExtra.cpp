@@ -8,12 +8,16 @@ VidaExtra::VidaExtra(float x_, float y_) : x(x_), y(y_) {
     shape.setOutlineColor(sf::Color::White);
     shape.setOutlineThickness(3);
     shape.setPosition(x, y);
-    // Cargar textura y configurar sprite
-    corazonTexture.loadFromFile("assets/images/Corazon.png");
-    corazonSprite.setTexture(corazonTexture);
-    corazonSprite.setOrigin(corazonTexture.getSize().x/2, corazonTexture.getSize().y/2);
-    corazonSprite.setScale(0.15f, 0.15f); // Ajusta el tamaño si es necesario
-    corazonSprite.setPosition(x, y);
+    // Cargar sprite animado
+    spriteTexture.loadFromFile("assets/images/sprite.png");
+    spriteAnimado.setTexture(spriteTexture);
+    spriteAnimado.setOrigin(spriteTexture.getSize().x/2, spriteTexture.getSize().y/2);
+    spriteAnimado.setScale(0.8f, 0.8f); // Más pequeño que el original
+    spriteAnimado.setPosition(x, y);
+    angulo = 0.f;
+    velocidadRotacion = 2.f;
+    direccionRotacion = 1;
+    relojCambioDireccion.restart();
 }
 
 void VidaExtra::mover(float limiteY, float limiteX, float velocidadY) {
@@ -22,16 +26,24 @@ void VidaExtra::mover(float limiteY, float limiteX, float velocidadY) {
         Reiniciar(limiteX);
     }
     shape.setPosition(x, y);
-    corazonSprite.setPosition(x, y);
+    spriteAnimado.setPosition(x, y);
+    // Animar rotación y cambio de dirección
+    if (relojCambioDireccion.getElapsedTime().asSeconds() > 0.7f) {
+        direccionRotacion = (rand() % 2 == 0) ? 1 : -1;
+        velocidadRotacion = 1.5f + static_cast<float>(rand() % 30) / 10.f;
+        relojCambioDireccion.restart();
+    }
+    angulo += velocidadRotacion * direccionRotacion;
+    spriteAnimado.setRotation(angulo);
 }
 
 void VidaExtra::dibujar(sf::RenderWindow& window) {
-    corazonSprite.setPosition(x, y);
-    window.draw(corazonSprite);
+    spriteAnimado.setPosition(x, y);
+    window.draw(spriteAnimado);
 }
 
 bool VidaExtra::colision(Nave& nave) {
-    if (shape.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
+    if (spriteAnimado.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }
     return false;
@@ -41,9 +53,7 @@ void VidaExtra::Reiniciar(float limiteX) {
     x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
     y = 0;
     shape.setPosition(x, y);
-    corazonSprite.setPosition(x, y);
+    spriteAnimado.setPosition(x, y);
 }
 
-float VidaExtra::getY() const {
-    return y;
-}
+float VidaExtra::getY() const { return y; }

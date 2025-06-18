@@ -17,4 +17,6 @@ public:
 private:
     float x, y;
     sf::CircleShape shape;
+    sf::Texture spriteTexture; // Textura del escudo
+    sf::Sprite spriteEscudo;   // Sprite del escudo
 };

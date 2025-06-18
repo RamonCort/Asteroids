@@ -3,7 +3,7 @@
 
 class Misil {
 public:
-    Misil(float x, float y);
+    Misil(float x, float y, float angulo = -90.f); // Nuevo: ángulo de disparo
     void Mover();
     void Dibujar(sf::RenderWindow& window);
     bool FueraDePantalla(float altoVentana) const;
@@ -13,6 +13,8 @@ private:
     static sf::Texture texturaDisparo;
     sf::Sprite spriteDisparo;
     float velocidad;
+    float anguloDisparo = -90.f; // Nuevo: dirección del disparo en grados
+    sf::Vector2f direccion;      // Nuevo: vector de dirección
 
     // Variables para animación de sprite
     int frameActual = 0;
