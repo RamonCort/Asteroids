@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include "../include/DobleDisparoItem.hpp"
 
-DobleDisparoItem::DobleDisparoItem(float x_, float y_) : x(x_), y(y_) {
+DobleDisparoItem::DobleDisparoItem(float posicionX, float posicionY) : x(posicionX), y(posicionY) {
     textura.loadFromFile("assets/images/Doble_Disparo_Item.png");
     sprite.setTexture(textura);
     sprite.setOrigin(textura.getSize().x/2, textura.getSize().y/2);
@@ -35,7 +35,7 @@ void DobleDisparoItem::Dibujar(sf::RenderWindow& window) {
     window.draw(sprite);
 }
 
-bool DobleDisparoItem::Colisionar(sf::Sprite& naveSprite) {
+bool DobleDisparoItem::VerificarColision(sf::Sprite& naveSprite) {
     return sprite.getGlobalBounds().intersects(naveSprite.getGlobalBounds());
 }
 

@@ -28,7 +28,7 @@ int Oportunidad::ObtenerOportunidades() const {
     return oportunidades;
 }
 
-bool Oportunidad::SinOportunidades() const {
+bool Oportunidad::VerificarSiSinOportunidades() const {
     return oportunidades <= 0;
 }
 

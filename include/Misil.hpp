@@ -3,10 +3,10 @@
 
 class Misil {
 public:
-    Misil(float x, float y, float angulo = -90.f); // Nuevo: ángulo de disparo
+    Misil(float posicionX, float posicionY, float angulo = -90.f); // Nuevo: ángulo de disparo
     void Mover();
     void Dibujar(sf::RenderWindow& window);
-    bool FueraDePantalla(float altoVentana) const;
+    bool VerificarSiEstaFueraDePantalla(float altoVentana) const;
     sf::FloatRect ObtenerLimites() const;
 private:
     sf::RectangleShape shape;

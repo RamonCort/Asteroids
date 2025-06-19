@@ -47,6 +47,6 @@ void Explosion::Dibujar(sf::RenderWindow& window) {
     if (!finished) window.draw(sprite);
 }
 
-bool Explosion::EstaTerminada() const {
+bool Explosion::VerificarSiEstaTerminada() const {
     return finished;
 }

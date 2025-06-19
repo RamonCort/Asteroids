@@ -1,7 +1,7 @@
 #include "../include/EscudoItem.hpp"
 #include <cstdlib>
 
-EscudoItem::EscudoItem(float x_, float y_) : x(x_), y(y_) {
+EscudoItem::EscudoItem(float posicionX, float posicionY) : x(posicionX), y(posicionY) {
     shape.setRadius(18.f);
     shape.setPointCount(20);
     shape.setFillColor(sf::Color::Red);
@@ -30,7 +30,7 @@ void EscudoItem::Dibujar(sf::RenderWindow& window) {
     window.draw(spriteEscudo);
 }
 
-bool EscudoItem::Colisionar(Nave& nave) {
+bool EscudoItem::VerificarColision(Nave& nave) {
     if (spriteEscudo.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }

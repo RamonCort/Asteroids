@@ -21,6 +21,9 @@
 // Prototipo de la función de selección de armamento
 int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font);
 
+// Prototipo de la función de instrucciones
+void mostrarInstrucciones(sf::RenderWindow& window, sf::Font& font);
+
 // Constructor
 Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Asteroids - Ventana de inicio"), fontLoaded(false) {
     if (!texture.loadFromFile("assets/images/nave.png")) {
@@ -314,10 +317,13 @@ void Ventana::Mostrar() {
         fuenteErrorMostrado = true;
     }
     // Pedir nombre antes de elegir nave
-    std::string nombreJugador = pedirNombre(window, fontGlobal);
-    // Menú de nave con título
+    std::string nombreJugador = pedirNombre(window, fontGlobal);    // Menú de nave con título
     int naveSeleccionada = seleccionarNave(window, fontGlobal);    // Menú de armamento
     int armamentoSeleccionado = seleccionarArmamento(window, fontGlobal);
+    
+    // Mostrar instrucciones del juego
+    mostrarInstrucciones(window, fontGlobal);
+    
     std::string navePath = naveSeleccionada==0 ? "assets/images/AstroNave_pixil.png" : "assets/images/nave.png";
 
     // --- Variables de juego declaradas fuera del bucle ---
@@ -390,10 +396,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             }
             
             asteroides.emplace_back(ax, ay);
-        }
-
-        bool pAnterior = false;
+        }        bool pAnterior = false;
         bool gameOver = false;
+        bool pausado = false;
 
         // --- Variables estáticas del fondo y agujero negro para todo el método
         static sf::Texture agujeroTexture;
@@ -409,14 +414,20 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
         sf::SoundBuffer bufferLaser;
         bufferLaser.loadFromFile("assets/music/Laser2.ogg");
         sf::Sound sonidoLaser;
-        sonidoLaser.setBuffer(bufferLaser);
-
-        // --- Variables para el láser ---
+        sonidoLaser.setBuffer(bufferLaser);        // --- Variables para el láser ---
         sf::Clock relojLaser;
         sf::Clock relojRecargaLaser;
         bool laserActivo = false;
         float duracionLaser = 1.0f;
         float recargaLaser = 2.0f;
+        
+        // Variables para almacenar información del láser para dibujo
+        bool mostrarLaser = false;
+        sf::VertexArray laserLineas(sf::Lines);
+        sf::VertexArray laserIzquierdo(sf::Lines, 2);
+        sf::VertexArray laserDerecho(sf::Lines, 2);
+        sf::VertexArray laserCentral(sf::Lines, 2);
+        bool esLaserDoble = false;
 
         while (window.isOpen() && !gameOver) {
             // Lógica de aparición de escudo cada 25 segundos
@@ -424,18 +435,22 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 escudoItem.Reiniciar(limiteX);
                 escudoItemActivo = true;
                 relojEscudoItem.restart();
-            }
-            sf::Event event;
+            }            sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
                     window.close();
-            }
-            window.clear(sf::Color::Black);
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                    pausado = !pausado; // Alternar pausa
+                }
+            }            window.clear(sf::Color::Black);
             window.draw(fondoSprite); // Dibuja el fondo antes de todo
 
             margen.Dibujar(window);
-            nave.Mover(window);
-            margen.Limitar(nave);            // Disparo de misil o láser (Espacio o click izquierdo del mouse)
+            
+            // Solo actualizar la lógica del juego si no está pausado
+            if (!pausado) {
+                nave.Mover(window);
+                margen.Limitar(nave);// Disparo de misil o láser (Espacio o click izquierdo del mouse)
             bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Mouse::isButtonPressed(sf::Mouse::Left);
             static bool dobleDisparoHabilitado = false;
             // Control de tiempo de doble disparo
@@ -491,18 +506,18 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                         sf::Vector2f puntaDer = naveSprite.getPosition() - lateral * offsetLateral + dirLaser * largo;
                         sf::Vector2f finIzq = puntaIzq + dirLaser * largoLaser;
                         sf::Vector2f finDer = puntaDer + dirLaser * largoLaser;
-                        sf::VertexArray laserIzq(sf::Lines, 2);
-                        laserIzq[0].position = puntaIzq;
-                        laserIzq[0].color = sf::Color::Cyan;
-                        laserIzq[1].position = finIzq;
-                        laserIzq[1].color = sf::Color::Cyan;
+                        sf::VertexArray laserIzq(sf::Lines, 2);                        laserIzquierdo[0].position = puntaIzq;
+                        laserIzquierdo[0].color = sf::Color::Cyan;
+                        laserIzquierdo[1].position = finIzq;
+                        laserIzquierdo[1].color = sf::Color::Cyan;
                         sf::VertexArray laserDer(sf::Lines, 2);
                         laserDer[0].position = puntaDer;
                         laserDer[0].color = sf::Color::Cyan;
                         laserDer[1].position = finDer;
                         laserDer[1].color = sf::Color::Cyan;
-                        window.draw(laserIzq);
-                        window.draw(laserDer);
+                        laserDerecho = laserDer;
+                        mostrarLaser = true;
+                        esLaserDoble = true;
                         // Colisión para ambos láseres laterales
                         auto colisionLaser = [&](const sf::Vector2f& start, const sf::Vector2f& end) {
                             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
@@ -525,7 +540,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                     }
                                 }
                                 if (intersecta) {
-                                    if (itAst->PuedeDestruirse()) {
+                                    if (itAst->VerificarSiPuedeDestruirse()) {
                                         itAst = asteroides.erase(itAst);
                                         punto.Sumar(30);
                                     } else {
@@ -542,15 +557,14 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                             }
                         };
                         colisionLaser(puntaIzq, finIzq);
-                        colisionLaser(puntaDer, finDer);
-                    } else {
+                        colisionLaser(puntaDer, finDer);                    } else {
                         // Láser normal (centro)
-                        sf::VertexArray laser(sf::Lines, 2);
-                        laser[0].position = puntaNave;
-                        laser[0].color = sf::Color::Cyan;
-                        laser[1].position = finLaser;
-                        laser[1].color = sf::Color::Cyan;
-                        window.draw(laser);
+                        laserCentral[0].position = puntaNave;
+                        laserCentral[0].color = sf::Color::Cyan;
+                        laserCentral[1].position = finLaser;
+                        laserCentral[1].color = sf::Color::Cyan;
+                        mostrarLaser = true;
+                        esLaserDoble = false;
                         // Colisión del láser con asteroides (destruye todo lo que toca)
                         for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                             sf::FloatRect bounds = itAst->sprite.getGlobalBounds();
@@ -572,7 +586,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                 }
                             }
                             if (intersecta) {
-                                if (itAst->PuedeDestruirse()) {
+                                if (itAst->VerificarSiPuedeDestruirse()) {
                                     itAst = asteroides.erase(itAst);
                                     punto.Sumar(30);
                                 } else {
@@ -587,9 +601,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                 ++itAst;
                             }
                         }
-                    }
-                    if (relojLaser.getElapsedTime().asSeconds() >= duracionLaser || !disparoActual) {
+                    }                    if (relojLaser.getElapsedTime().asSeconds() >= duracionLaser || !disparoActual) {
                         laserActivo = false;
+                        mostrarLaser = false;
                         relojRecargaLaser.restart();
                         sonidoLaser.stop();
                     }
@@ -599,23 +613,21 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
 
             // --- COLISIONES ASTEROIDE-NAVE ---
             for (auto& ast : asteroides) {
-                if (!invulnerable && ast.ColisionarConNave(nave)) {                    oportunidad.PerderVida();
+                if (!invulnerable && ast.VerificarColisionConNave(nave)) {                    oportunidad.PerderVida();
                     vida.EstablecerVidas(oportunidad.ObtenerVidas());
                     ast.x = static_cast<float>(rand() % static_cast<int>(limiteX - 40) + 20);
                     ast.y = 0;
                     ast.sprite.setPosition(ast.x, ast.y);
-                    if (oportunidad.SinOportunidades()) {
+                    if (oportunidad.VerificarSiSinOportunidades()) {
                         gameOver = true;
                         break;
                     }
                 }
-            }
-            // Dibujar y mover escudo item si está activo
+            }            // Dibujar y mover escudo item si está activo
             if (escudoItemActivo) {
                 escudoItem.Mover(limiteY, limiteX, 1.0f);
-                escudoItem.Dibujar(window);
                 // Colisión con nave
-                if (escudoItem.Colisionar(nave)) {
+                if (escudoItem.VerificarColision(nave)) {
                     invulnerable = true;
                     relojInvulnerable.restart();
                     escudoItemActivo = false;
@@ -631,11 +643,11 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                 bool asteroideEliminado = false;
                 for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
-                    if (itAst->ColisionarConMisil(*itMisil)) {
+                    if (itAst->VerificarColisionConMisil(*itMisil)) {
                         itMisil = misiles.erase(itMisil);
                         
                         // Verificar si el asteroide puede destruirse completamente
-                        if (itAst->PuedeDestruirse()) {
+                        if (itAst->VerificarSiPuedeDestruirse()) {
                             // Asteroide pequeño, se destruye completamente
                             itAst = asteroides.erase(itAst);
                             asteroideEliminado = true;
@@ -672,7 +684,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Mover y dibujar misiles
             for (auto it = misiles.begin(); it != misiles.end(); ) {
                 it->Mover();
-                if (it->FueraDePantalla(0)) {
+                if (it->VerificarSiEstaFueraDePantalla(0)) {
                     it = misiles.erase(it);
                 } else {
                     it->Dibujar(window);
@@ -710,10 +722,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 
                 asteroides.emplace_back(ax, ay);
                 relojAsteroides.restart();
-            }// Mover y dibujar asteroides con movimiento teledirigido hacia la nave
+            }            // Mover y dibujar asteroides con movimiento teledirigido hacia la nave
             for (auto& asteroide : asteroides) {
                 asteroide.MoverHaciaObjetivo(nave.ObtenerSprite().getPosition(), limiteY, limiteX, velocidadAsteroide);
-                asteroide.Dibujar(window);
             }
 
             // --- Agujero Negro central ---
@@ -820,11 +831,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     if (distVida < radioColisionVida) {
                         vidaExtraActiva = false;
                     }
-                }
-            }
-
-            // Dibuja la nave después del agujero negro para que quede encima
-            nave.Dibujar(window);
+                }            }
 
             if (fontLoaded) {
                 errorText.setString("No se pudo cargar la imagen:\nassets/nave.png");
@@ -857,35 +864,17 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     textoPuntos.setFillColor(sf::Color::White);
                     textoPuntos.setPosition(20, 20);
                     window.draw(textoPuntos);
-                }
-            }
-
-            vida.Dibujar(window);
-            // Mostrar oportunidades restantes
-            sf::Font fontOpor;
-            if (fontOpor.loadFromFile("assets/arial.ttf")) {
-                sf::Text textoOpor;
-                textoOpor.setFont(fontOpor);
-                textoOpor.setString("Oportunidades: " + std::to_string(oportunidad.ObtenerOportunidades()));
-                textoOpor.setCharacterSize(28);
-                textoOpor.setFillColor(sf::Color::White);
-                textoOpor.setPosition(20, 80);
-                window.draw(textoOpor);
-            }            puntaje.EstablecerPuntos(punto.ObtenerPuntos());
-            puntaje.Dibujar(window);
+                }            }
 
             // Lógica de aparición de vida extra cada 10 segundos (más frecuente)
             if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 10.0f) {
                 vidaExtra.Reiniciar(limiteX);
                 vidaExtraActiva = true;
                 relojVidaExtra.restart();
-            }
-
-            // Dibujar y mover vida extra si está activa
+            }            // Dibujar y mover vida extra si está activa
             if (vidaExtraActiva) {                vidaExtra.Mover(limiteY, limiteX, 1.0f);
-                vidaExtra.Dibujar(window);
                 // Colisión con nave
-                if (vidaExtra.Colisionar(nave)) {
+                if (vidaExtra.VerificarColision(nave)) {
                     oportunidad.SumarVida(); // Suma solo una vida
                     vida.EstablecerVidas(oportunidad.ObtenerVidas());
                     vidaExtraActiva = false;
@@ -913,7 +902,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             if (dobleDisparoEnPantalla) {
                 dobleDisparoItem.Mover(limiteY, limiteX, 1.0f);
                 dobleDisparoItem.Dibujar(window);
-                if (dobleDisparoItem.Colisionar(nave.ObtenerSprite())) {
+                if (dobleDisparoItem.VerificarColision(nave.ObtenerSprite())) {
                     dobleDisparoEnPantalla = false;
                     dobleDisparoActivo = true;
                     tiempoDobleDisparo = 5.0f; // 5 segundos de doble disparo
@@ -932,11 +921,99 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             for (auto it = explosiones.begin(); it != explosiones.end(); ) {
                 it->Actualizar();
                 it->Dibujar(window);
-                if (it->EstaTerminada()) {
+                if (it->VerificarSiEstaTerminada()) {
                     it = explosiones.erase(it);
                 } else {
                     ++it;
                 }
+            }
+            } // Fin del bloque if (!pausado)            // Dibujar elementos que siempre se ven (pausado o no)
+            nave.Dibujar(window);
+            for (auto& asteroide : asteroides) {
+                asteroide.Dibujar(window);
+            }
+            for (auto& misil : misiles) {
+                misil.Dibujar(window);
+            }
+            
+            // Dibujar láser si está activo
+            if (mostrarLaser) {
+                if (esLaserDoble) {
+                    window.draw(laserIzquierdo);
+                    window.draw(laserDerecho);
+                } else {
+                    window.draw(laserCentral);
+                }
+            }
+            
+            // Dibujar agujero negro si está disponible y el puntaje es suficiente
+            if (agujeroCargado && agujeroVisible && punto.ObtenerPuntos() >= 600) {
+                window.draw(agujeroSprite);
+            }
+            
+            // Dibujar elementos de interfaz (puntaje, vidas, etc.)
+            vida.Dibujar(window);
+            puntaje.EstablecerPuntos(punto.ObtenerPuntos());
+            puntaje.Dibujar(window);
+            
+            // Dibujar puntaje en esquina superior derecha
+            sf::Font fontPuntos;
+            if (fontPuntos.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
+                sf::Text textoPuntos;
+                textoPuntos.setFont(fontPuntos);
+                textoPuntos.setString("Puntos: " + std::to_string(punto.ObtenerPuntos()));
+                textoPuntos.setCharacterSize(32);
+                textoPuntos.setFillColor(sf::Color::White);
+                float textWidth = textoPuntos.getLocalBounds().width;
+                textoPuntos.setPosition(window.getSize().x - textWidth - 40, 20);
+                window.draw(textoPuntos);
+            }
+            
+            // Dibujar oportunidades restantes
+            sf::Font fontOpor;
+            if (fontOpor.loadFromFile("assets/arial.ttf")) {
+                sf::Text textoOpor;
+                textoOpor.setFont(fontOpor);
+                textoOpor.setString("Oportunidades: " + std::to_string(oportunidad.ObtenerOportunidades()));
+                textoOpor.setCharacterSize(28);
+                textoOpor.setFillColor(sf::Color::White);
+                textoOpor.setPosition(20, 80);
+                window.draw(textoOpor);
+            }
+            
+            // Dibujar vida extra si está activa
+            if (vidaExtraActiva) {
+                vidaExtra.Dibujar(window);
+            }
+            
+            // Dibujar escudo item si está activo
+            if (escudoItemActivo) {
+                escudoItem.Dibujar(window);
+            }
+            
+            // Mostrar mensaje de pausa si está pausado
+            if (pausado) {
+                sf::Text textoPausa;
+                sf::Font fontPausa;
+                if (fontPausa.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
+                    textoPausa.setFont(fontPausa);
+                } else {
+                    textoPausa.setFont(fontGlobal);
+                }
+                textoPausa.setString(L"JUEGO PAUSADO\nPresiona ESC para continuar");
+                textoPausa.setCharacterSize(48);
+                textoPausa.setFillColor(sf::Color::Yellow);
+                textoPausa.setStyle(sf::Text::Bold);
+                sf::FloatRect bounds = textoPausa.getLocalBounds();
+                textoPausa.setOrigin(bounds.width/2, bounds.height/2);
+                textoPausa.setPosition(window.getSize().x/2, window.getSize().y/2);
+                
+                // Fondo semi-transparente para el texto de pausa
+                sf::RectangleShape fondoPausa;
+                fondoPausa.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
+                fondoPausa.setFillColor(sf::Color(0, 0, 0, 128));
+                window.draw(fondoPausa);
+                window.draw(textoPausa);
             }
 
             window.display();
@@ -1156,4 +1233,361 @@ int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
         window.display();
     }
     return seleccion;
+}
+
+// Función para mostrar las instrucciones del juego
+void mostrarInstrucciones(sf::RenderWindow& window, sf::Font& font) {
+    // Cargar la fuente Retro Gaming
+    sf::Font retroFont;
+    if (!retroFont.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
+        std::cerr << "No se pudo cargar la fuente Retro Gaming.ttf, usando fuente por defecto" << std::endl;
+        // Si no se puede cargar, usar la fuente pasada como parámetro
+    }
+    sf::Font& fuenteAUsar = retroFont.getInfo().family.empty() ? font : retroFont;
+
+    // Cargar el fondo
+    sf::Texture fondoTexture;
+    if (!fondoTexture.loadFromFile("assets/images/Fondo2.png")) {
+        std::cerr << "No se pudo cargar el fondo para instrucciones" << std::endl;
+    }
+    sf::Sprite fondoSprite(fondoTexture);
+    float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
+    float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
+    fondoSprite.setScale(scaleX, scaleY);    // Título principal
+    sf::Text titulo;
+    titulo.setFont(fuenteAUsar);
+    titulo.setString(L"INSTRUCCIONES DEL JUEGO");
+    titulo.setCharacterSize(48);
+    titulo.setFillColor(sf::Color::Yellow);
+    titulo.setStyle(sf::Text::Bold);
+    sf::FloatRect tituloBounds = titulo.getLocalBounds();
+    titulo.setOrigin(tituloBounds.width/2, tituloBounds.height/2);
+    titulo.setPosition(window.getSize().x/2, 60);    // Sección de controles
+    sf::Text tituloControles;
+    tituloControles.setFont(fuenteAUsar);
+    tituloControles.setString(L"CONTROLES:");
+    tituloControles.setCharacterSize(32);
+    tituloControles.setFillColor(sf::Color::Cyan);
+    tituloControles.setStyle(sf::Text::Bold);
+    tituloControles.setPosition(50, 130);
+
+    sf::Text controles;
+    controles.setFont(fuenteAUsar);
+    controles.setString(L"• W / Flecha Arriba: Mover hacia adelante\n"
+                       L"• Mouse: Girar la nave (apuntar)\n"
+                       L"• Click Izquierdo: Disparar\n"
+                       L"• ESC: Pausar el juego");
+    controles.setCharacterSize(24);
+    controles.setFillColor(sf::Color::White);
+    controles.setPosition(70, 180);    // Título de items
+    sf::Text tituloItems;
+    tituloItems.setFont(fuenteAUsar);
+    tituloItems.setString(L"ITEMS Y POWER-UPS:");
+    tituloItems.setCharacterSize(32);
+    tituloItems.setFillColor(sf::Color::Cyan);
+    tituloItems.setStyle(sf::Text::Bold);
+    tituloItems.setPosition(50, 320);// Cargar sprites de items
+    sf::Texture spriteTexture, corazonTexture, escudoTexture, dobleDisparoTexture;
+    sf::Sprite spriteItem, corazonItem, escudoItem, dobleDisparoItem;
+    
+    // Sistema de asteroides de fondo
+    struct AsteroideBackground {
+        sf::CircleShape shape;
+        sf::Vector2f velocity;
+        float rotation;
+        float rotationSpeed;
+    };
+    
+    std::vector<AsteroideBackground> asteroidesBackground;
+    sf::Texture asteroidTexture;
+    
+    // Cargar textura del asteroide si está disponible
+    bool asteroidTextureLoaded = asteroidTexture.loadFromFile("assets/images/Asteroide.pixil.png");
+    
+    // Crear asteroides iniciales
+    for (int i = 0; i < 8; i++) {
+        AsteroideBackground ast;
+          if (asteroidTextureLoaded) {
+            // Usar sprite con textura
+            ast.shape.setRadius(15 + rand() % 20);
+            ast.shape.setTexture(&asteroidTexture);
+            ast.shape.setFillColor(sf::Color(255, 255, 255, 80)); // Transparente
+        } else {
+            // Usar forma básica
+            ast.shape.setRadius(15 + rand() % 20);
+            ast.shape.setFillColor(sf::Color(100, 100, 100, 80)); // Transparente
+            ast.shape.setOutlineColor(sf::Color(255, 255, 255, 60)); // Contorno transparente
+            ast.shape.setOutlineThickness(1);
+        }
+        
+        // Posición inicial aleatoria en los bordes
+        int side = rand() % 4;
+        switch (side) {
+            case 0: // Arriba
+                ast.shape.setPosition(-50, rand() % (int)window.getSize().y);
+                ast.velocity = sf::Vector2f(50 + rand() % 100, 20 + rand() % 40);
+                break;
+            case 1: // Derecha
+                ast.shape.setPosition(window.getSize().x + 50, rand() % (int)window.getSize().y);
+                ast.velocity = sf::Vector2f(-(50 + rand() % 100), 20 + rand() % 40);
+                break;
+            case 2: // Abajo
+                ast.shape.setPosition(rand() % (int)window.getSize().x, window.getSize().y + 50);
+                ast.velocity = sf::Vector2f(20 + rand() % 40, -(50 + rand() % 100));
+                break;
+            case 3: // Izquierda
+                ast.shape.setPosition(rand() % (int)window.getSize().x, -50);
+                ast.velocity = sf::Vector2f(20 + rand() % 40, 50 + rand() % 100);
+                break;
+        }
+        
+        ast.rotation = 0;
+        ast.rotationSpeed = (rand() % 100 - 50) / 10.0f;  // -5 a 5 grados por frame
+        ast.shape.setOrigin(ast.shape.getRadius(), ast.shape.getRadius());
+        
+        asteroidesBackground.push_back(ast);
+    }
+    
+    // Sprites decorativos adicionales
+    std::vector<sf::Sprite> spritesDecorativos;
+    
+    // Vida extra (sprite.png) - Principal
+    if (spriteTexture.loadFromFile("assets/images/sprite.png")) {
+        spriteItem.setTexture(spriteTexture);
+        spriteItem.setScale(0.4f, 0.4f);  // Más pequeño
+        spriteItem.setPosition(70, 370);
+        
+        // Crear sprites decorativos adicionales
+        for (int i = 0; i < 3; i++) {
+            sf::Sprite decorativo;
+            decorativo.setTexture(spriteTexture);
+            decorativo.setScale(0.2f, 0.2f);  // Muy pequeños para decoración
+            spritesDecorativos.push_back(decorativo);
+        }
+        // Posiciones decorativas para la estrella
+        spritesDecorativos[0].setPosition(900, 150);
+        spritesDecorativos[1].setPosition(1000, 300);
+        spritesDecorativos[2].setPosition(850, 600);
+    }
+    
+    // Corazón (vida extra) - Principal
+    if (corazonTexture.loadFromFile("assets/images/Corazon.png")) {
+        corazonItem.setTexture(corazonTexture);
+        corazonItem.setScale(0.3f, 0.3f);  // Más pequeño
+        corazonItem.setPosition(70, 430);
+        
+        // Crear corazones decorativos adicionales
+        for (int i = 0; i < 4; i++) {
+            sf::Sprite decorativo;
+            decorativo.setTexture(corazonTexture);
+            decorativo.setScale(0.15f, 0.15f);  // Muy pequeños para decoración
+            spritesDecorativos.push_back(decorativo);
+        }
+        // Posiciones decorativas para los corazones
+        int baseIndex = spritesDecorativos.size() - 4;
+        spritesDecorativos[baseIndex].setPosition(950, 200);
+        spritesDecorativos[baseIndex + 1].setPosition(800, 450);
+        spritesDecorativos[baseIndex + 2].setPosition(1050, 500);
+        spritesDecorativos[baseIndex + 3].setPosition(920, 750);
+    }
+    
+    // Escudo - Principal
+    if (escudoTexture.loadFromFile("assets/images/Escudo.item.png")) {
+        escudoItem.setTexture(escudoTexture);
+        escudoItem.setScale(0.4f, 0.4f);  // Más pequeño
+        escudoItem.setPosition(70, 490);
+        
+        // Crear escudos decorativos adicionales
+        for (int i = 0; i < 2; i++) {
+            sf::Sprite decorativo;
+            decorativo.setTexture(escudoTexture);
+            decorativo.setScale(0.2f, 0.2f);  // Pequeños para decoración
+            spritesDecorativos.push_back(decorativo);
+        }
+        // Posiciones decorativas para los escudos
+        int baseIndex = spritesDecorativos.size() - 2;
+        spritesDecorativos[baseIndex].setPosition(880, 350);
+        spritesDecorativos[baseIndex + 1].setPosition(1020, 650);
+    }
+    
+    // Doble disparo - Principal
+    if (dobleDisparoTexture.loadFromFile("assets/images/Doble_Disparo_Item.png")) {
+        dobleDisparoItem.setTexture(dobleDisparoTexture);
+        dobleDisparoItem.setScale(0.4f, 0.4f);  // Más pequeño
+        dobleDisparoItem.setPosition(70, 550);
+        
+        // Crear doble disparos decorativos adicionales
+        for (int i = 0; i < 2; i++) {
+            sf::Sprite decorativo;
+            decorativo.setTexture(dobleDisparoTexture);
+            decorativo.setScale(0.2f, 0.2f);  // Pequeños para decoración
+            spritesDecorativos.push_back(decorativo);
+        }
+        // Posiciones decorativas para doble disparo
+        int baseIndex = spritesDecorativos.size() - 2;
+        spritesDecorativos[baseIndex].setPosition(970, 400);
+        spritesDecorativos[baseIndex + 1].setPosition(820, 700);
+    }    // Descripciones de items con sprites correspondientes
+    sf::Text descripcionSprite, descripcionCorazon, descripcionEscudo, descripcionDoble;      // Configurar sprites para mostrar junto a las descripciones
+    if (spriteTexture.getSize().x > 0) {
+        spriteItem.setScale(0.80f, 0.80f);  // Tamaño mediano y consistente
+        spriteItem.setPosition(55, 375);    // Alineado a la izquierda
+    }
+    
+    if (corazonTexture.getSize().x > 0) {
+        corazonItem.setScale(0.09f, 0.09f); // Tamaño mediano y consistente
+        corazonItem.setPosition(30, 430);   // Alineado a la izquierda
+    }
+    
+    if (escudoTexture.getSize().x > 0) {
+        escudoItem.setScale(0.80f, 0.80f);  // Tamaño mediano y consistente
+        escudoItem.setPosition(45, 490);    // Alineado a la izquierda
+    }
+      if (dobleDisparoTexture.getSize().x > 0) {
+        dobleDisparoItem.setScale(0.09f, 0.09f);  // Tamaño mediano y consistente
+        dobleDisparoItem.setPosition(43, 547);    // Alineado a la izquierda
+    }      descripcionSprite.setFont(fuenteAUsar);
+    descripcionSprite.setString(L"Vida Extra - Otorga una vida adicional");
+    descripcionSprite.setCharacterSize(20);
+    descripcionSprite.setFillColor(sf::Color::White);
+    descripcionSprite.setPosition(100, 380);
+    
+    descripcionCorazon.setFont(fuenteAUsar);
+    descripcionCorazon.setString(L"Corazón - Restaura tu salud");
+    descripcionCorazon.setCharacterSize(20);
+    descripcionCorazon.setFillColor(sf::Color::White);
+    descripcionCorazon.setPosition(100, 440);
+    
+    descripcionEscudo.setFont(fuenteAUsar);
+    descripcionEscudo.setString(L"Escudo - Te hace invulnerable por 5 segundos");
+    descripcionEscudo.setCharacterSize(20);
+    descripcionEscudo.setFillColor(sf::Color::White);
+    descripcionEscudo.setPosition(100, 500);
+    
+    descripcionDoble.setFont(fuenteAUsar);
+    descripcionDoble.setString(L"Doble Disparo - Duplica tu poder de fuego");
+    descripcionDoble.setCharacterSize(20);
+    descripcionDoble.setFillColor(sf::Color::White);
+    descripcionDoble.setPosition(100, 560);    // Información adicional
+    sf::Text tituloInfo;
+    tituloInfo.setFont(fuenteAUsar);
+    tituloInfo.setString(L"INFORMACIÓN ADICIONAL:");
+    tituloInfo.setCharacterSize(32);
+    tituloInfo.setFillColor(sf::Color::Cyan);
+    tituloInfo.setStyle(sf::Text::Bold);
+    tituloInfo.setPosition(50, 620);
+
+    sf::Text infoAdicional;
+    infoAdicional.setFont(fuenteAUsar);
+    infoAdicional.setString(L"• Destruye asteroides para ganar puntos\n"
+                           L"• A los 600 puntos aparece el agujero negro\n"
+                           L"• Evita que los asteroides te toquen\n"
+                           L"• Los asteroides grandes se dividen al ser disparados");
+    infoAdicional.setCharacterSize(20);
+    infoAdicional.setFillColor(sf::Color::White);
+    infoAdicional.setPosition(70, 670);    // Instrucción para continuar
+    sf::Text continuar;
+    continuar.setFont(fuenteAUsar);
+    continuar.setString(L"Presiona ESPACIO para comenzar el juego");
+    continuar.setCharacterSize(28);
+    continuar.setFillColor(sf::Color::Yellow);
+    continuar.setStyle(sf::Text::Bold);
+    sf::FloatRect continuarBounds = continuar.getLocalBounds();
+    continuar.setOrigin(continuarBounds.width/2, continuarBounds.height/2);
+    continuar.setPosition(window.getSize().x/2, window.getSize().y - 80);// Animación del texto de continuar
+    sf::Clock animClock;
+    bool mostrarTexto = true;
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+                return;
+            }
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                return; // Salir de las instrucciones
+            }
+        }        // Animación del texto "continuar"
+        if (animClock.getElapsedTime().asSeconds() > 0.8f) {
+            mostrarTexto = !mostrarTexto;
+            animClock.restart();
+        }
+
+        // Actualizar asteroides de fondo
+        float deltaTime = 1.0f / 60.0f; // Aproximadamente 60 FPS
+        for (auto& ast : asteroidesBackground) {
+            // Mover asteroide
+            ast.shape.move(ast.velocity * deltaTime);
+            
+            // Rotar asteroide
+            ast.rotation += ast.rotationSpeed;
+            ast.shape.setRotation(ast.rotation);
+            
+            // Verificar si el asteroide salió de la pantalla y reposicionarlo
+            sf::Vector2f pos = ast.shape.getPosition();
+            bool outOfBounds = false;
+            
+            if (pos.x < -100 || pos.x > window.getSize().x + 100 ||
+                pos.y < -100 || pos.y > window.getSize().y + 100) {
+                outOfBounds = true;
+            }
+            
+            if (outOfBounds) {
+                // Reposicionar desde un lado aleatorio
+                int side = rand() % 4;
+                switch (side) {
+                    case 0: // Arriba
+                        ast.shape.setPosition(-50, rand() % (int)window.getSize().y);
+                        ast.velocity = sf::Vector2f(50 + rand() % 100, 20 + rand() % 40);
+                        break;
+                    case 1: // Derecha
+                        ast.shape.setPosition(window.getSize().x + 50, rand() % (int)window.getSize().y);
+                        ast.velocity = sf::Vector2f(-(50 + rand() % 100), 20 + rand() % 40);
+                        break;
+                    case 2: // Abajo
+                        ast.shape.setPosition(rand() % (int)window.getSize().x, window.getSize().y + 50);
+                        ast.velocity = sf::Vector2f(20 + rand() % 40, -(50 + rand() % 100));
+                        break;
+                    case 3: // Izquierda
+                        ast.shape.setPosition(rand() % (int)window.getSize().x, -50);
+                        ast.velocity = sf::Vector2f(20 + rand() % 40, 50 + rand() % 100);
+                        break;
+                }
+            }
+        }
+
+        // Dibujar todo
+        window.clear();
+        window.draw(fondoSprite);
+        
+        // Dibujar asteroides de fondo primero
+        for (const auto& ast : asteroidesBackground) {
+            window.draw(ast.shape);
+        }
+        
+        // Solo dibujar texto, sin sprites que interfieran con la lectura
+        
+        window.draw(titulo);window.draw(tituloControles);
+        window.draw(controles);        window.draw(tituloItems);
+        
+        // Dibujar sprites de items junto a sus descripciones
+        if (spriteTexture.getSize().x > 0) window.draw(spriteItem);
+        if (corazonTexture.getSize().x > 0) window.draw(corazonItem);
+        if (escudoTexture.getSize().x > 0) window.draw(escudoItem);
+        if (dobleDisparoTexture.getSize().x > 0) window.draw(dobleDisparoItem);
+        
+        window.draw(descripcionSprite);
+        window.draw(descripcionCorazon);
+        window.draw(descripcionEscudo);
+        window.draw(descripcionDoble);
+        window.draw(tituloInfo);
+        window.draw(infoAdicional);
+        
+        if (mostrarTexto) {
+            window.draw(continuar);
+        }
+        
+        window.display();
+    }
 }

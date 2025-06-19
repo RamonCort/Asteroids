@@ -6,7 +6,7 @@ public:
     Oportunidad(int oportunidades = 3, int vidasPorOportunidad = 3);    void PerderVida();
     int ObtenerVidas() const;
     int ObtenerOportunidades() const;
-    bool SinOportunidades() const;
+    bool VerificarSiSinOportunidades() const;
     void Reiniciar();
     void SumarVida();
 private:

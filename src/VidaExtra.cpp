@@ -1,7 +1,7 @@
 #include "../include/VidaExtra.hpp"
 #include <cstdlib>
 
-VidaExtra::VidaExtra(float x_, float y_) : x(x_), y(y_) {
+VidaExtra::VidaExtra(float posicionX, float posicionY) : x(posicionX), y(posicionY) {
     shape.setRadius(18.f);
     shape.setPointCount(20);
     shape.setFillColor(sf::Color::Green);
@@ -42,7 +42,7 @@ void VidaExtra::Dibujar(sf::RenderWindow& window) {
     window.draw(spriteAnimado);
 }
 
-bool VidaExtra::Colisionar(Nave& nave) {
+bool VidaExtra::VerificarColision(Nave& nave) {
     if (spriteAnimado.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds())) {
         return true;
     }

@@ -5,7 +5,7 @@ class Explosion {
 public:
     Explosion(float x, float y);    void Actualizar();
     void Dibujar(sf::RenderWindow& window);
-    bool EstaTerminada() const;
+    bool VerificarSiEstaTerminada() const;
 
 private:
     static sf::Texture texture;

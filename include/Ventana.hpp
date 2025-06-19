@@ -4,7 +4,8 @@
 #include <string>
 
 class Ventana {
-public:    Ventana(int width = 400, int height = 300); // Cambia el constructor
+public:
+    Ventana(int width = 400, int height = 300); // Cambia el constructor
     void Mostrar();
     void MostrarInicio(); // <-- Nuevo método para la pantalla de inicio
 private:

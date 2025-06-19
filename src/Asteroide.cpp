@@ -6,8 +6,8 @@
 sf::Texture Asteroide::textureAsteroide;
 bool Asteroide::textureCargada = false;
 
-Asteroide::Asteroide(float x_, float y_, TamanoAsteroide tam, float targetX, float targetY) 
-    : x(x_), y(y_), velocidadX(0), velocidadY(0), tamano(tam) {
+Asteroide::Asteroide(float posicionX, float posicionY, TamanoAsteroide tam, float targetX, float targetY) 
+    : x(posicionX), y(posicionY), velocidadX(0), velocidadY(0), tamano(tam) {
     if (!textureCargada) {        if (!textureAsteroide.loadFromFile("assets/images/Asteroide.pixil.png")) {
             // Si falla, usar círculo como fallback con tamaño según el tipo
             float radio = 20.f;
@@ -76,7 +76,7 @@ void Asteroide::Colisionar(Nave& nave) {
     }
 }
 
-bool Asteroide::ColisionarConNave(Nave& nave) {
+bool Asteroide::VerificarColisionConNave(Nave& nave) {
     if (textureCargada) {
         return sprite.getGlobalBounds().intersects(nave.ObtenerSprite().getGlobalBounds());
     } else {
@@ -84,7 +84,7 @@ bool Asteroide::ColisionarConNave(Nave& nave) {
     }
 }
 
-bool Asteroide::ColisionarConMisil(const Misil& misil) {
+bool Asteroide::VerificarColisionConMisil(const Misil& misil) {
     if (textureCargada) {
         return sprite.getGlobalBounds().intersects(misil.ObtenerLimites());
     } else {

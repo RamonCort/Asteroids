@@ -3,7 +3,7 @@
 
 sf::Texture Misil::texturaDisparo; // Definición de la textura estática
 
-Misil::Misil(float x, float y, float angulo) : velocidad(7.0f), anguloDisparo(angulo) {
+Misil::Misil(float posicionX, float posicionY, float angulo) : velocidad(7.0f), anguloDisparo(angulo) {
     if (texturaDisparo.getSize().x == 0) {
         texturaDisparo.loadFromFile("assets/images/Disparo.png");
     }
@@ -16,8 +16,7 @@ Misil::Misil(float x, float y, float angulo) : velocidad(7.0f), anguloDisparo(an
         tiempoPorFrame = 0.08f;
         spriteDisparo.setTexture(texturaDisparo);
         spriteDisparo.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
-        spriteDisparo.setOrigin(frameWidth / 2, frameHeight);
-        spriteDisparo.setPosition(x, y);
+        spriteDisparo.setOrigin(frameWidth / 2, frameHeight);        spriteDisparo.setPosition(posicionX, posicionY);
         spriteDisparo.setScale(0.15f, 0.15f);
         relojAnimacion.restart();
         spriteDisparo.setRotation(anguloDisparo);
@@ -25,7 +24,7 @@ Misil::Misil(float x, float y, float angulo) : velocidad(7.0f), anguloDisparo(an
         shape.setSize(sf::Vector2f(8, 24));
         shape.setFillColor(sf::Color::Yellow);
         shape.setOrigin(shape.getSize().x / 2, shape.getSize().y);
-        shape.setPosition(x, y);
+        shape.setPosition(posicionX, posicionY);
         shape.setRotation(anguloDisparo);
     }
     // Calcular vector de dirección
@@ -56,7 +55,7 @@ void Misil::Dibujar(sf::RenderWindow& window) {
         window.draw(shape);
 }
 
-bool Misil::FueraDePantalla(float altoVentana) const {
+bool Misil::VerificarSiEstaFueraDePantalla(float altoVentana) const {
     if (texturaDisparo.getSize().x > 0)
         return spriteDisparo.getPosition().y + frameHeight < 0;
     else

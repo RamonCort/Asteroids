@@ -1,0 +1,321 @@
+@startuml AsteroidsDiagramaCompleto
+
+!theme blueprint
+
+' ==================== ESTRUCTURAS ====================
+struct ParticulaRastro {
+    + sf::Vector2f posicion
+    + float vida
+    + sf::Uint8 alpha
+    + ParticulaRastro(sf::Vector2f pos)
+}
+
+' ==================== ENUMERACIONES ====================
+enum TamanoAsteroide {
+    GRANDE = 0
+    PEQUENO = 1
+}
+
+' ==================== CLASE PRINCIPAL ====================
+class Ventana {
+    - sf::RenderWindow window
+    - sf::Texture texture
+    - sf::Sprite sprite
+    - sf::Font font
+    - sf::Text errorText
+    - bool fontLoaded
+    - sf::Music music
+    
+    + Ventana(int width = 400, int height = 300)
+    + void Mostrar()
+    + void MostrarInicio()
+}
+
+' ==================== CLASES DE JUEGO ====================
+class Nave {
+    # sf::Texture texture
+    # sf::Sprite sprite
+    # float velocidad = 5.0f
+    # std::vector<ParticulaRastro> particulas
+    # sf::Vector2f posicionAnterior
+    # bool seEstaMoviendo = false
+    # bool tieneRastro = false
+    
+    + Nave(float x, float y, const std::string& ruta = "assets/images/nave.png")
+    + void Dibujar(sf::RenderWindow& window)
+    + void Mover(const sf::RenderWindow& window)
+    + void ApuntarHaciaMouse(const sf::RenderWindow& window)
+    + sf::Sprite& ObtenerSprite()
+    + float ObtenerVelocidad() const
+    + void EstablecerVelocidad(float v)
+    + float ObtenerAngulo() const
+    + void ActualizarRastro()
+    + void DibujarRastro(sf::RenderWindow& window)
+}
+
+class AstroNave {
+    + AstroNave(float x, float y)
+}
+
+class Asteroide {
+    + sf::CircleShape shape
+    + float x, y
+    + float velocidadX, velocidadY
+    + TamanoAsteroide tamano
+    + static sf::Texture textureAsteroide
+    + static bool textureCargada
+    + sf::Sprite sprite
+    
+    + Asteroide(float posicionX, float posicionY, TamanoAsteroide tam = TamanoAsteroide::GRANDE, float targetX = 0, float targetY = 0)
+    + float ObtenerX() const
+    + float ObtenerY() const
+    + void Dibujar(sf::RenderWindow& window)
+    + void Mover(float limiteY, float limiteX, float velocidadBase = 3.0f)
+    + void MoverHaciaObjetivo(const sf::Vector2f& posicionNave, float limiteY, float limiteX, float velocidadBase = 3.0f)
+    + void Colisionar(Nave& nave)
+    + bool VerificarColisionConNave(Nave& nave)
+    + bool VerificarColisionConMisil(const Misil& misil)
+    + void ReiniciarPosicion(float limiteX, float limiteY)
+    + std::vector<Asteroide> Dividir() const
+    + TamanoAsteroide ObtenerTamano() const
+    + bool VerificarSiPuedeDestruirse() const
+}
+
+class Misil {
+    - sf::RectangleShape shape
+    - static sf::Texture texturaDisparo
+    - sf::Sprite spriteDisparo
+    - float velocidad
+    - float anguloDisparo = -90.f
+    - sf::Vector2f direccion
+    - int frameActual = 0
+    - int totalFrames = 5
+    - int framesPorFila = 5
+    - int frameWidth = 125
+    - int frameHeight = 313
+    - float tiempoPorFrame = 0.08f
+    - sf::Clock relojAnimacion
+    
+    + Misil(float posicionX, float posicionY, float angulo = -90.f)
+    + void Mover()
+    + void Dibujar(sf::RenderWindow& window)
+    + bool VerificarSiEstaFueraDePantalla(float altoVentana) const
+    + sf::FloatRect ObtenerLimites() const
+}
+
+class Explosion {
+    - static sf::Texture texture
+    - static bool textureLoaded
+    - sf::Sprite sprite
+    - int frameActual
+    - int totalFrames
+    - int framesPorFila
+    - int frameWidth
+    - int frameHeight
+    - float tiempoPorFrame
+    - sf::Clock relojAnimacion
+    - bool finished
+    - int anchoTotal
+    - int anchoFrameFila2
+    
+    + Explosion(float x, float y)
+    + void Actualizar()
+    + void Dibujar(sf::RenderWindow& window)
+    + bool VerificarSiEstaTerminada() const
+}
+
+' ==================== CLASES DE INTERFAZ ====================
+class Margen {
+    - sf::RectangleShape lineaSuperior
+    - sf::RectangleShape lineaInferior
+    - sf::RectangleShape lineaIzquierda
+    - sf::RectangleShape lineaDerecha
+    - sf::CircleShape esquinaSupIzq
+    - sf::CircleShape esquinaSupDer
+    - sf::CircleShape esquinaInfIzq
+    - sf::CircleShape esquinaInfDer
+    - float ancho, alto, grosor
+    
+    + Margen(float anchoVentana, float altoVentana, float grosor = 2.f)
+    + void Dibujar(sf::RenderWindow& window)
+    + void Limitar(Nave& nave)
+}
+
+class Vida {
+    - sf::RectangleShape box
+    - sf::Font font
+    - sf::Text texto
+    - float width
+    - float height
+    
+    + Vida()
+    + void EstablecerVidas(int vidas)
+    + void Dibujar(sf::RenderWindow& window)
+}
+
+class Puntaje {
+    - sf::RectangleShape box
+    - sf::Font font
+    - sf::Text texto
+    - float width
+    - float height
+    
+    + Puntaje(float windowWidth)
+    + void EstablecerPuntos(int puntos)
+    + void Dibujar(sf::RenderWindow& window)
+}
+
+' ==================== CLASES DE LOGICA ====================
+class Punto {
+    - int puntos
+    
+    + Punto()
+    + void Sumar()
+    + void Sumar(int valor)
+    + int ObtenerPuntos() const
+}
+
+class Oportunidad {
+    - int oportunidades
+    - int vidas
+    - int vidasPorOportunidad
+    
+    + Oportunidad(int oportunidades = 3, int vidasPorOportunidad = 3)
+    + void PerderVida()
+    + int ObtenerVidas() const
+    + int ObtenerOportunidades() const
+    + bool VerificarSiSinOportunidades() const
+    + void Reiniciar()
+    + void SumarVida()
+}
+
+class TablaDePuntaje {
+    - std::string archivo_
+    - std::vector<Entrada> entradas
+    
+    + struct Entrada {
+    +     std::string nombre
+    +     int puntaje
+    + }
+    
+    + TablaDePuntaje(const std::string& archivo)
+    + void Agregar(const std::string& nombre, int puntaje)
+    + const std::vector<Entrada>& Obtener() const
+    - void Cargar()
+    - void Guardar()
+}
+
+' ==================== CLASES DE ITEMS ====================
+class VidaExtra {
+    - float x, y
+    - sf::CircleShape shape
+    - sf::Texture corazonTexture
+    - sf::Sprite corazonSprite
+    - sf::Texture spriteTexture
+    - sf::Sprite spriteAnimado
+    - float angulo = 0.f
+    - float velocidadRotacion = 2.f
+    - int direccionRotacion = 1
+    - sf::Clock relojCambioDireccion
+    
+    + VidaExtra(float posicionX, float posicionY)
+    + void Mover(float limiteY, float limiteX, float velocidadY = 1.0f)
+    + void Dibujar(sf::RenderWindow& window)
+    + bool VerificarColision(Nave& nave)
+    + void Reiniciar(float limiteX)
+    + float ObtenerY() const
+    + float ObtenerX() const
+    + void EstablecerX(float nx)
+    + void EstablecerY(float ny)
+    + void EstablecerPosicion(float nx, float ny)
+}
+
+class EscudoItem {
+    - float x, y
+    - sf::CircleShape shape
+    - sf::Texture spriteTexture
+    - sf::Sprite spriteEscudo
+    
+    + EscudoItem(float posicionX, float posicionY)
+    + void Mover(float limiteY, float limiteX, float velocidadY = 1.0f)
+    + void Dibujar(sf::RenderWindow& window)
+    + bool VerificarColision(Nave& nave)
+    + void Reiniciar(float limiteX)
+    + float ObtenerY() const
+    + float ObtenerX() const
+    + void EstablecerX(float nx)
+    + void EstablecerY(float ny)
+    + void EstablecerPos(float nx, float ny)
+}
+
+class DobleDisparoItem {
+    - float x, y
+    - sf::Texture textura
+    - sf::Sprite sprite
+    - float angulo
+    - float velocidadRotacion
+    - int direccionRotacion
+    - sf::Clock relojCambioDireccion
+    
+    + DobleDisparoItem(float posicionX, float posicionY)
+    + void Mover(float limiteY, float limiteX, float velocidadY = 1.0f)
+    + void Dibujar(sf::RenderWindow& window)
+    + bool VerificarColision(sf::Sprite& naveSprite)
+    + void Reiniciar(float limiteX)
+    + float ObtenerY() const
+    + float ObtenerX() const
+    + void EstablecerPosicion(float nx, float ny)
+}
+
+' ==================== CLASES VACIAS/FUTURAS ====================
+class Jugador {
+    ' ... vacío de momento ...
+}
+
+class AgujeroDeGusano {
+    ' ... definición futura ...
+}
+
+' ==================== RELACIONES ====================
+
+' Herencia
+AstroNave --|> Nave : extends
+
+' Composición y Agregación
+Ventana *-- Nave : contiene
+Ventana *-- Asteroide : contiene múltiples
+Ventana *-- Misil : contiene múltiples
+Ventana *-- Explosion : contiene múltiples
+Ventana *-- Margen : contiene
+Ventana *-- Vida : contiene
+Ventana *-- Puntaje : contiene
+Ventana *-- Punto : contiene
+Ventana *-- Oportunidad : contiene
+Ventana *-- VidaExtra : contiene
+Ventana *-- EscudoItem : contiene
+Ventana *-- DobleDisparoItem : contiene
+Ventana *-- TablaDePuntaje : usa
+
+' Dependencias
+Nave ..> ParticulaRastro : usa
+Asteroide ..> TamanoAsteroide : usa
+Asteroide ..> Nave : interactúa con
+Asteroide ..> Misil : interactúa con
+Misil ..> Nave : disparado por
+VidaExtra ..> Nave : colisiona con
+EscudoItem ..> Nave : colisiona con
+DobleDisparoItem ..> Nave : colisiona con
+Margen ..> Nave : limita
+
+' Notas adicionales
+note top of Ventana : Clase principal que coordina\ntodo el juego y maneja\nla ventana de SFML
+
+note right of TamanoAsteroide : Enumeración que define\nlos diferentes tamaños\nde asteroides
+
+note bottom of ParticulaRastro : Estructura para efectos\nvisuales de rastro de la nave
+
+note left of Asteroide : Los asteroides pueden dividirse\nal ser impactados por misiles
+
+note right of Explosion : Animación sprite con frames\npara efectos visuales
+
+@enduml

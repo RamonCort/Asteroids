@@ -4,10 +4,10 @@
 
 class EscudoItem {
 public:
-    EscudoItem(float x, float y);
+    EscudoItem(float posicionX, float posicionY);
     void Mover(float limiteY, float limiteX, float velocidadY = 1.0f);
     void Dibujar(sf::RenderWindow& window);
-    bool Colisionar(Nave& nave);
+    bool VerificarColision(Nave& nave);
     void Reiniciar(float limiteX);
     float ObtenerY() const;
     float ObtenerX() const { return x; }
