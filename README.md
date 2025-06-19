@@ -204,13 +204,11 @@ Asteroids/
 
 ## 🏆 Sistema de Puntuación
 
-| Acción | Puntos |
-|--------|--------|
-| Asteroide Grande | 20 puntos |
-| Asteroide Mediano | 50 puntos |
-| Asteroide Pequeño | 100 puntos |
-| Power-up Recogido | 10 puntos |
-| Supervivencia (por segundo) | 1 punto |
+|     Acción       | Puntos |
+|------------------|--------|
+| Asteroide Grande | 10 puntos |
+| Asteroide Pequeño| 30 puntos |
+
 
 ## 🔧 Desarrollo y Contribución
 
@@ -339,8 +337,8 @@ MIT License - Copyright (c) 2024 Ramon Cort
 ## 📞 Contacto y Soporte
 
 - **GitHub Issues**: Para reportar bugs o solicitar features
-- **Email**: [tu-email@example.com](mailto:tu-email@example.com)
-- **Discord**: Tu servidor de Discord (si tienes)
+- **Email**: [gepaorgu1@gmail.com](mailto:gepaorgu1@gmail.com), [a24110188@ceti.mx](mailto:a24110188@ceti.mx)
+- **Discord**: ramoncor70107456, geoopatoo — [Servidor de Discord](https://discord.gg/jp4Xrpf9)
 
 ---
 
@@ -348,6 +346,7 @@ MIT License - Copyright (c) 2024 Ramon Cort
 
 **⭐ Si te gusta este proyecto, no olvides darle una estrella ⭐**
 
-Hecho con ❤️ por [Ramon Cort](https://github.com/RamonCort)
+Hecho con ❤️ por [Ramon Cortes](https://github.com/RamonCort)
+
 
 </div>
