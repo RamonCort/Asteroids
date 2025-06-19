@@ -16,4 +16,10 @@ private:
     sf::Text errorText;
     bool fontLoaded;
     sf::Music music; // Música de fondo
+    
+    // Variables para el control de cámara con mouse
+    sf::View camara;
+    sf::Vector2f ultimaPosicionMouse;
+    bool arrastandoCamara;
+    float velocidadCamara;
 };

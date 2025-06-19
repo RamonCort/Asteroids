@@ -15,6 +15,7 @@
 #include <vector>
 #include "../include/Asteroide.hpp"
 #include <cmath> // Nueva inclusión para std::sin
+#include <cstdlib> // Para rand()
 #include "../include/TablaDePuntaje.hpp"
 #include "../include/Explosion.hpp"
 
@@ -39,6 +40,13 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
     } else {
         std::cerr << "No se pudo cargar la música de fondo: assets/music/videoplayback.ogg" << std::endl;
     }
+    
+    // Inicializar cámara con control de mouse
+    camara = window.getDefaultView();
+    ultimaPosicionMouse = sf::Vector2f(0, 0);
+    arrastandoCamara = false;
+    velocidadCamara = 1.0f;
+    
     // (Eliminado el bloque de carga de fuente y configuración de errorText)
 }
 
@@ -62,11 +70,10 @@ void Ventana::MostrarInicio() {
         // Si falla, simplemente no se muestra el título
     } else {
         std::cout << "Título cargado correctamente" << std::endl;
-    }
-    sf::Sprite tituloSprite(tituloTexture);
-    // Escalar el título para que sea visible y centrado
-    float tituloScale = std::min(window.getSize().x / tituloSprite.getLocalBounds().width * 0.7f,
-                                 window.getSize().y / tituloSprite.getLocalBounds().height * 0.25f);
+    }    sf::Sprite tituloSprite(tituloTexture);
+    // Escalar el título para que sea visible y centrado - AUMENTADO EL TAMAÑO
+    float tituloScale = std::min(window.getSize().x / tituloSprite.getLocalBounds().width * 1.2f,
+                                 window.getSize().y / tituloSprite.getLocalBounds().height * 0.4f);
     tituloSprite.setScale(tituloScale, tituloScale);
     tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
     tituloSprite.setPosition(window.getSize().x / 2.f, 200);
@@ -80,7 +87,46 @@ void Ventana::MostrarInicio() {
     playText.setOutlineThickness(4.f);
     sf::FloatRect playBounds = playText.getLocalBounds();
     playText.setOrigin(playBounds.width / 2, playBounds.height / 2);
-    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);    sf::Clock animClock;
+    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
+
+    // --- Configuración de cometas pasando por el fondo ---
+    sf::Texture cometaTexture;
+    if (!cometaTexture.loadFromFile("assets/images/Asteroide.pixil.png")) {
+        std::cerr << "No se pudo cargar la imagen del cometa: assets/images/Asteroide.pixil.png\n";
+    }
+    
+    // Estructura para manejar cometas
+    struct Cometa {
+        sf::Sprite sprite;
+        float velocidadX;
+        float velocidadY;
+        float rotacion;
+        float escala;
+    };
+    
+    // Vector de cometas
+    std::vector<Cometa> cometas;
+      // Crear cometas iniciales
+    for (int i = 0; i < 8; i++) {
+        Cometa cometa;
+        cometa.sprite.setTexture(cometaTexture);
+        cometa.escala = 0.5f + (rand() % 4) * 0.1f; // Escalas entre 0.5 y 0.8
+        cometa.sprite.setScale(cometa.escala, cometa.escala);
+        cometa.sprite.setOrigin(cometaTexture.getSize().x / 2.f, cometaTexture.getSize().y / 2.f);
+        
+        // Posición inicial fuera de la pantalla (lado izquierdo)
+        cometa.sprite.setPosition(-100, rand() % (int)window.getSize().y);
+          // Velocidades aleatorias
+        cometa.velocidadX = 80 + rand() % 120; // Velocidad horizontal entre 80 y 200
+        cometa.velocidadY = -40 + rand() % 80; // Velocidad vertical entre -40 y 40
+        cometa.rotacion = 0.5f + (rand() % 10) * 0.1f; // Rotación entre 0.5 y 1.4
+          // Color azul semi-transparente para efecto de fondo
+        cometa.sprite.setColor(sf::Color(100, 150, 255, 200));
+          cometas.push_back(cometa);
+    }
+
+    sf::Clock animClock;
+    sf::Clock cometasClock; // Reloj separado para los cometas
     sf::Clock inicioTimer; // Timer para evitar salto automático
     float animSpeed = 2.5f;
     bool puedePresionar = false; // Bandera para controlar cuándo se puede presionar
@@ -116,14 +162,34 @@ void Ventana::MostrarInicio() {
             playText.setString("CARGANDO...");
             playText.setFillColor(sf::Color(150, 150, 150));
         }
-        
-        // Recentrar el texto
+          // Recentrar el texto
         sf::FloatRect bounds = playText.getLocalBounds();
         playText.setOrigin(bounds.width / 2, bounds.height / 2);
-        playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
+        playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);        // --- Actualizar cometas ---
+        float deltaTime = cometasClock.restart().asSeconds();
+        
+        for (auto& cometa : cometas) {
+            // Actualizar posición
+            cometa.sprite.move(cometa.velocidadX * deltaTime, cometa.velocidadY * deltaTime);
+            
+            // Actualizar rotación
+            cometa.sprite.rotate(cometa.rotacion);
+              // Si el cometa sale por la derecha, reiniciar por la izquierda
+            if (cometa.sprite.getPosition().x > window.getSize().x + 100) {
+                cometa.sprite.setPosition(-100, rand() % (int)window.getSize().y);
+                cometa.velocidadX = 80 + rand() % 120;
+                cometa.velocidadY = -40 + rand() % 80;
+                cometa.escala = 0.5f + (rand() % 4) * 0.1f;
+                cometa.sprite.setScale(cometa.escala, cometa.escala);
+            }
+        }
 
         window.clear();
-        window.draw(portadaSprite);
+        window.draw(portadaSprite);          // Dibujar cometas detrás del título
+        for (const auto& cometa : cometas) {
+            window.draw(cometa.sprite); // Ya tienen el color azul aplicado
+        }
+        
         window.draw(tituloSprite);
         window.draw(playText); // Dibuja el botón visual de PLAY
         window.display();
