@@ -1,6 +1,6 @@
 #include "../include/Puntaje.hpp"
 
-Puntaje::Puntaje(float windowWidth) : width(200), height(60) {
+Puntaje::Puntaje(float windowWidth) : width(250), height(60) {
     box.setSize(sf::Vector2f(width, height));
     box.setFillColor(sf::Color(30,30,30,200));
     box.setOutlineColor(sf::Color::White);

@@ -2,7 +2,6 @@
 
 int main() {
     Ventana ventana(800, 600); // Cambia el tamaño aquí
-    ventana.MostrarInicio();   // Mostrar pantalla de inicio
-    ventana.Mostrar();         // Lógica principal del juego
+    ventana.Mostrar();         // Lógica principal del juego (incluye portada)
     return 0;
 }

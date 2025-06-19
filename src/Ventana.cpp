@@ -20,7 +20,10 @@
 #include "../include/Explosion.hpp"
 
 // Prototipo de la función de selección de armamento
-int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font);
+int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font, sf::Sound& sonidoGameStart, sf::Music& musicaInicio);
+
+// Prototipo de la función de selección de nave
+int seleccionarNave(sf::RenderWindow& window, sf::Font& font, sf::Sound& sonidoGameStart, sf::Music& musicaInicio);
 
 // Prototipo de la función de instrucciones
 void mostrarInstrucciones(sf::RenderWindow& window, sf::Font& font);
@@ -31,14 +34,47 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
         std::cerr << "No se pudo cargar la imagen: assets/images/nave.png" << std::endl;
     } else {
         sprite.setTexture(texture);
-        sprite.setPosition(100, 100);
-    }
-    // Inicializar y reproducir música de fondo
+        sprite.setPosition(100, 100);    }    // Cargar música de fondo (pero no reproducir automáticamente)
     if (music.openFromFile("assets/music/videoplayback.ogg")) {
         music.setLoop(true);
-        music.play();
+        // No reproducir aquí, se reproducirá cuando inicie el juego
     } else {
         std::cerr << "No se pudo cargar la música de fondo: assets/music/videoplayback.ogg" << std::endl;
+    }
+      // Cargar música de inicio/menús
+    if (musicaInicio.openFromFile("assets/music/Musica_Inicio.ogg")) {
+        musicaInicio.setLoop(true);
+        musicaInicio.setVolume(70.0f); // Volumen más bajo para menús
+    } else {
+        std::cerr << "No se pudo cargar la música de inicio: assets/music/Musica_Inicio.ogg" << std::endl;
+    }
+    
+    // Cargar música de muerte/Game Over
+    if (musicaMuerte.openFromFile("assets/music/Musica_Muerte.ogg")) {
+        musicaMuerte.setLoop(true);
+        musicaMuerte.setVolume(60.0f); // Volumen más bajo para ambiente de muerte
+    } else {
+        std::cerr << "No se pudo cargar la música de muerte: assets/music/Musica_Muerte.ogg" << std::endl;
+    }
+      // Cargar sonido de selección/inicio
+    if (bufferGameStart.loadFromFile("assets/music/game_start.ogg")) {
+        sonidoGameStart.setBuffer(bufferGameStart);
+    } else {
+        std::cerr << "No se pudo cargar el sonido game_start.ogg" << std::endl;
+    }
+      // Cargar sonido de obtener item
+    if (bufferObtenerItem.loadFromFile("assets/music/obtener_Item_1.ogg")) {
+        sonidoObtenerItem.setBuffer(bufferObtenerItem);
+    } else {
+        std::cerr << "No se pudo cargar el sonido obtener_Item_1.ogg" << std::endl;
+    }
+    
+    // Cargar sonido de la nave
+    if (bufferSonidoNave.loadFromFile("assets/music/sonido_Nave.ogg")) {
+        sonidoNave.setBuffer(bufferSonidoNave);
+        sonidoNave.setVolume(30.0f); // Volumen más bajo para no ser repetitivo
+    } else {
+        std::cerr << "No se pudo cargar el sonido sonido_Nave.ogg" << std::endl;
     }
     
     // Inicializar cámara con control de mouse
@@ -52,6 +88,11 @@ Ventana::Ventana(int width, int height) : window(sf::VideoMode(1200, 900), "Aste
 
 void Ventana::MostrarInicio() {
     std::cout << "Iniciando pantalla de portada..." << std::endl;
+    
+    // Reproducir música de inicio/menús
+    if (musicaInicio.getStatus() != sf::Music::Playing) {
+        musicaInicio.play();
+    }
     
     // Cargar la imagen de portada
     sf::Texture portadaTexture;
@@ -76,18 +117,25 @@ void Ventana::MostrarInicio() {
                                  window.getSize().y / tituloSprite.getLocalBounds().height * 0.4f);
     tituloSprite.setScale(tituloScale, tituloScale);
     tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
-    tituloSprite.setPosition(window.getSize().x / 2.f, 200);
-
-    // --- Botón visual de PLAY en el menú principal ---
+    tituloSprite.setPosition(window.getSize().x / 2.f, 200);    // --- Botón Jugar centrado seleccionable por mouse ---
     sf::Font fontPlay;
-    fontPlay.loadFromFile("assets/arial.ttf");
-    sf::Text playText("PRESIONA ENTER PARA JUGAR", fontPlay, 60);
-    playText.setFillColor(sf::Color(200, 200, 255));
+    fontPlay.loadFromFile("assets/fonts/Retro Gaming.ttf");
+    sf::Text playText("JUGAR", fontPlay, 64);
+    playText.setFillColor(sf::Color::White);
     playText.setOutlineColor(sf::Color::Black);
-    playText.setOutlineThickness(4.f);
+    playText.setOutlineThickness(3.f);
     sf::FloatRect playBounds = playText.getLocalBounds();
     playText.setOrigin(playBounds.width / 2, playBounds.height / 2);
-    playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);
+    playText.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f + 200);
+
+    // Fondo del botón
+    sf::RectangleShape botonFondo;
+    botonFondo.setSize(sf::Vector2f(playBounds.width + 60, playBounds.height + 40));
+    botonFondo.setOrigin((playBounds.width + 60) / 2, (playBounds.height + 40) / 2);
+    botonFondo.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f + 200);
+    botonFondo.setFillColor(sf::Color(0, 0, 0, 120)); // Negro semi-transparente
+    botonFondo.setOutlineColor(sf::Color::White);
+    botonFondo.setOutlineThickness(2.f);
 
     // --- Configuración de cometas pasando por el fondo ---
     sf::Texture cometaTexture;
@@ -123,18 +171,17 @@ void Ventana::MostrarInicio() {
           // Color azul semi-transparente para efecto de fondo
         cometa.sprite.setColor(sf::Color(100, 150, 255, 200));
           cometas.push_back(cometa);
-    }
-
-    sf::Clock animClock;
+    }    sf::Clock animClock;
     sf::Clock cometasClock; // Reloj separado para los cometas
     sf::Clock inicioTimer; // Timer para evitar salto automático
     float animSpeed = 2.5f;
     bool puedePresionar = false; // Bandera para controlar cuándo se puede presionar
+    bool botonHover = false; // Para detectar si el mouse está sobre el botón
     
     std::cout << "Entrando al bucle de portada..." << std::endl;
 
     while (window.isOpen()) {
-        // Después de 1 segundo, permitir que se presione ENTER
+        // Después de 1 segundo, permitir que se presione ENTER o se use el mouse
         if (!puedePresionar && inicioTimer.getElapsedTime().asSeconds() > 1.0f) {
             puedePresionar = true;
         }
@@ -142,11 +189,30 @@ void Ventana::MostrarInicio() {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
-                window.close();            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter && puedePresionar) {
+                window.close();
+            
+            // Detección de mouse sobre el botón
+            if (event.type == sf::Event::MouseMoved && puedePresionar) {
+                sf::Vector2f mousePos = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
+                botonHover = botonFondo.getGlobalBounds().contains(mousePos);
+            }
+            
+            // Click del mouse en el botón
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && puedePresionar) {
+                sf::Vector2f mousePos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);                if (botonFondo.getGlobalBounds().contains(mousePos)) {
+                    std::cout << "Botón JUGAR clickeado, saliendo de portada..." << std::endl;
+                    sonidoGameStart.play(); // Reproducir sonido de selección
+                    return; // Sale al hacer click en el botón
+                }
+            }
+              // Mantener funcionalidad de ENTER
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter && puedePresionar) {
                 std::cout << "ENTER presionado, saliendo de portada..." << std::endl;
+                sonidoGameStart.play(); // Reproducir sonido de selección
                 return; // Sale al presionar ENTER solo después del delay
             }
         }
+        
         // Animación: solo escala del sprite del título, sin cambio de color
         float t = animClock.getElapsedTime().asSeconds();
         float scale = 1.0f + 0.08f * std::sin(t * animSpeed);
@@ -154,18 +220,32 @@ void Ventana::MostrarInicio() {
         tituloSprite.setColor(sf::Color::White); // Sin animación de color
         // Mantener centrado
         tituloSprite.setOrigin(tituloSprite.getLocalBounds().width / 2, tituloSprite.getLocalBounds().height / 2);
-        tituloSprite.setPosition(window.getSize().x / 2.f, 200);        // Cambiar el texto dependiendo de si se puede presionar o no
+        tituloSprite.setPosition(window.getSize().x / 2.f, 200);
+        
+        // Animación del botón Jugar con movimiento vertical suave
+        float botonOffset = std::sin(t * 1.5f) * 15.f; // Movimiento vertical suave
+        float botonY = window.getSize().y / 2.f + 200 + botonOffset;
+        
+        // Cambiar colores según hover y disponibilidad
         if (puedePresionar) {
-            playText.setString("PRESIONA ENTER PARA JUGAR");
-            playText.setFillColor(sf::Color(200, 200, 255));
+            if (botonHover) {
+                playText.setFillColor(sf::Color::Yellow);
+                botonFondo.setFillColor(sf::Color(50, 50, 50, 180));
+                botonFondo.setOutlineColor(sf::Color::Yellow);
+            } else {
+                playText.setFillColor(sf::Color::White);
+                botonFondo.setFillColor(sf::Color(0, 0, 0, 120));
+                botonFondo.setOutlineColor(sf::Color::White);
+            }
         } else {
-            playText.setString("CARGANDO...");
             playText.setFillColor(sf::Color(150, 150, 150));
+            botonFondo.setFillColor(sf::Color(0, 0, 0, 80));
+            botonFondo.setOutlineColor(sf::Color(100, 100, 100));
         }
-          // Recentrar el texto
-        sf::FloatRect bounds = playText.getLocalBounds();
-        playText.setOrigin(bounds.width / 2, bounds.height / 2);
-        playText.setPosition(window.getSize().x / 2.f, window.getSize().y - 180);        // --- Actualizar cometas ---
+        
+        // Actualizar posiciones del botón con animación
+        playText.setPosition(window.getSize().x / 2.f, botonY);
+        botonFondo.setPosition(window.getSize().x / 2.f, botonY);// --- Actualizar cometas ---
         float deltaTime = cometasClock.restart().asSeconds();
         
         for (auto& cometa : cometas) {
@@ -182,22 +262,34 @@ void Ventana::MostrarInicio() {
                 cometa.escala = 0.5f + (rand() % 4) * 0.1f;
                 cometa.sprite.setScale(cometa.escala, cometa.escala);
             }
-        }
-
-        window.clear();
+        }        window.clear();
         window.draw(portadaSprite);          // Dibujar cometas detrás del título
         for (const auto& cometa : cometas) {
             window.draw(cometa.sprite); // Ya tienen el color azul aplicado
         }
         
         window.draw(tituloSprite);
-        window.draw(playText); // Dibuja el botón visual de PLAY
+        window.draw(botonFondo); // Dibujar fondo del botón
+        window.draw(playText); // Dibujar texto del botón
         window.display();
     }
 }
 
 // Nueva función para seleccionar nave
-int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
+int seleccionarNave(sf::RenderWindow& window, sf::Font& font, sf::Sound& sonidoGameStart, sf::Music& musicaInicio) {
+    // Asegurar que la música de menú esté sonando
+    if (musicaInicio.getStatus() != sf::Music::Playing) {
+        musicaInicio.play();
+    }
+    
+    // Cargar imagen de fondo
+    sf::Texture fondoTexture;
+    fondoTexture.loadFromFile("assets/images/Fondo.png");
+    sf::Sprite fondoSprite(fondoTexture);
+    float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
+    float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
+    fondoSprite.setScale(scaleX, scaleY);
+
     sf::Texture tex1, tex2;
     tex1.loadFromFile("assets/images/AstroNave_pixil.png");
     tex2.loadFromFile("assets/images/nave.png");
@@ -209,7 +301,7 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
 
     bool elegido = false;
     sf::Text txt("Elige tu nave: ← → ENTER", font, 48);
-    txt.setFillColor(sf::Color::Yellow);
+    txt.setFillColor(sf::Color::White); // Cambiado a blanco
     txt.setOutlineColor(sf::Color::Black);
     txt.setOutlineThickness(3.f);
     sf::FloatRect txtBounds = txt.getLocalBounds();
@@ -220,7 +312,7 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
     sf::Font fontRetroGaming;
     fontRetroGaming.loadFromFile("assets/fonts/Retro Gaming.ttf");
     sf::Text leyenda("Favor de seleccionar su nave", fontRetroGaming, 44);
-    leyenda.setFillColor(sf::Color(80, 160, 255)); // Azul
+    leyenda.setFillColor(sf::Color::White); // Cambiado a blanco
     leyenda.setOutlineColor(sf::Color::Black);
     leyenda.setOutlineThickness(4.f);
     leyenda.setStyle(sf::Text::Bold);
@@ -230,13 +322,15 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
 
     sf::Clock animClock;
     while(window.isOpen() && !elegido) {
-        sf::Event event;
-        while(window.pollEvent(event)) {
+        sf::Event event;        while(window.pollEvent(event)) {
             if(event.type == sf::Event::Closed) window.close();
             if(event.type == sf::Event::KeyPressed) {
                 if(event.key.code == sf::Keyboard::Left) seleccion = 0;
                 if(event.key.code == sf::Keyboard::Right) seleccion = 1;
-                if(event.key.code == sf::Keyboard::Enter) elegido = true;
+                if(event.key.code == sf::Keyboard::Enter) {
+                    sonidoGameStart.play(); // Reproducir sonido de selección
+                    elegido = true;
+                }
             }
         }
         float t = animClock.getElapsedTime().asSeconds();
@@ -244,6 +338,7 @@ int seleccionarNave(sf::RenderWindow& window, sf::Font& font) {
         leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 220 + offset);
         txt.setPosition(window.getSize().x/2.f, window.getSize().y/2.f-180 + offset/2.f);
         window.clear(sf::Color::Black);
+        window.draw(fondoSprite); // Dibujar el fondo primero
         window.draw(leyenda);
         window.draw(txt);
         if(seleccion==0) nave1.setColor(sf::Color::Yellow), nave2.setColor(sf::Color::White);
@@ -269,10 +364,9 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     sf::Font inputFont;
     if (!inputFont.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
         inputFont = font;
-    }
-    // Leyenda centrada y bonita arriba del recuadro
+    }    // Leyenda centrada y bonita arriba del recuadro
     sf::Text leyenda("Favor de Escribir tu nombre", inputFont, 36);
-    leyenda.setFillColor(sf::Color::Yellow);
+    leyenda.setFillColor(sf::Color::White);
     leyenda.setOutlineColor(sf::Color::Black);
     leyenda.setOutlineThickness(3.f);
     leyenda.setStyle(sf::Text::Bold | sf::Text::Italic);
@@ -281,13 +375,13 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     leyenda.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f - 40);
 
     sf::Text textoNombre("", inputFont, 36);
-    textoNombre.setFillColor(sf::Color::Yellow);
+    textoNombre.setFillColor(sf::Color::White);
     textoNombre.setPosition(window.getSize().x / 2.f - 190, window.getSize().y / 2.f + 5);
 
     sf::RectangleShape inputBox;
     inputBox.setSize(sf::Vector2f(400, 50));
     inputBox.setFillColor(sf::Color(255, 255, 255, 60)); // Blanco translúcido
-    inputBox.setOutlineColor(sf::Color::Yellow);
+    inputBox.setOutlineColor(sf::Color::White);
     inputBox.setOutlineThickness(2);
     inputBox.setPosition(window.getSize().x / 2.f - 200, window.getSize().y / 2.f);
 
@@ -301,11 +395,9 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
     // Ajustar el fondo al tamaño de la ventana
     float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
     float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
-    fondoSprite.setScale(scaleX, scaleY);
-
-    // Texto grande tipo pantalla de inicio
+    fondoSprite.setScale(scaleX, scaleY);    // Texto grande tipo pantalla de inicio
     sf::Text tituloNombre("ESCRIBE TU NOMBRE", font, 72);
-    tituloNombre.setFillColor(sf::Color(200, 200, 255));
+    tituloNombre.setFillColor(sf::Color::White);
     tituloNombre.setOutlineColor(sf::Color::Black);
     tituloNombre.setOutlineThickness(8.f);
     tituloNombre.setStyle(sf::Text::Bold);
@@ -349,7 +441,16 @@ std::string pedirNombre(sf::RenderWindow& window, sf::Font& font) {
 }
 
 void Ventana::Mostrar() {
+    // Mostrar la portada solo al inicio
+    std::cout << "Mostrando portada..." << std::endl;
+    MostrarInicio();
+    
+    // Limpiar buffer de eventos después de la portada
+    sf::Event clearEvent;
+    while (window.pollEvent(clearEvent)) {}
+    
     inicio:
+    // Desde aquí, solo menús y juego (SIN portada)
     // --- Variables de límites de ventana ---
     float limiteX = window.getSize().x;
     float limiteY = window.getSize().y;
@@ -381,11 +482,13 @@ void Ventana::Mostrar() {
     if (!fuenteCargada && !fuenteErrorMostrado) {
         std::cerr << "Failed to load font \"assets/arial.ttf\"" << std::endl;
         fuenteErrorMostrado = true;
-    }
-    // Pedir nombre antes de elegir nave
-    std::string nombreJugador = pedirNombre(window, fontGlobal);    // Menú de nave con título
-    int naveSeleccionada = seleccionarNave(window, fontGlobal);    // Menú de armamento
-    int armamentoSeleccionado = seleccionarArmamento(window, fontGlobal);
+    }    // Pedir nombre antes de elegir nave
+    std::string nombreJugador = pedirNombre(window, fontGlobal);
+      // Menú de nave con título
+    int naveSeleccionada = seleccionarNave(window, fontGlobal, sonidoGameStart, musicaInicio);
+    
+    // Menú de armamento
+    int armamentoSeleccionado = seleccionarArmamento(window, fontGlobal, sonidoGameStart, musicaInicio);
     
     // Mostrar instrucciones del juego
     mostrarInstrucciones(window, fontGlobal);
@@ -475,12 +578,17 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
         static bool agujeroVisible = true;
         static bool fondoCambiado = false;
 
-        // --- Bucle principal del juego ---
-        // --- Sonido de disparo ---
+        // --- Bucle principal del juego ---        // --- Sonido de disparo ---
         sf::SoundBuffer bufferLaser;
         bufferLaser.loadFromFile("assets/music/Laser2.ogg");
         sf::Sound sonidoLaser;
-        sonidoLaser.setBuffer(bufferLaser);        // --- Variables para el láser ---
+        sonidoLaser.setBuffer(bufferLaser);
+          // --- Sonido de explosión de asteroide ---
+        sf::SoundBuffer bufferExplosion;
+        bufferExplosion.loadFromFile("assets/music/explosion_Asteroide.ogg");
+        sf::Sound sonidoExplosion;        sonidoExplosion.setBuffer(bufferExplosion);
+        
+        // --- Variables para el láser ---
         sf::Clock relojLaser;
         sf::Clock relojRecargaLaser;
         bool laserActivo = false;
@@ -492,8 +600,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
         sf::VertexArray laserLineas(sf::Lines);
         sf::VertexArray laserIzquierdo(sf::Lines, 2);
         sf::VertexArray laserDerecho(sf::Lines, 2);
-        sf::VertexArray laserCentral(sf::Lines, 2);
-        bool esLaserDoble = false;
+        sf::VertexArray laserCentral(sf::Lines, 2);        bool esLaserDoble = false;        // Detener música de menú e iniciar música de fondo al comenzar el juego
+        musicaInicio.stop();
+        music.play();
 
         while (window.isOpen() && !gameOver) {
             // Lógica de aparición de escudo cada 25 segundos
@@ -504,17 +613,32 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             }            sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
-                    window.close();
-                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                    window.close();                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                    sonidoGameStart.play(); // Reproducir sonido al pausar/reanudar
                     pausado = !pausado; // Alternar pausa
                 }
             }            window.clear(sf::Color::Black);
             window.draw(fondoSprite); // Dibuja el fondo antes de todo
 
             margen.Dibujar(window);
-            
-            // Solo actualizar la lógica del juego si no está pausado
+              // Solo actualizar la lógica del juego si no está pausado
             if (!pausado) {
+                // Verificar si la nave se está moviendo hacia adelante y reproducir sonido
+                static bool sonidoNaveReproduciendo = false;
+                bool moviendoAdelante = sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+                
+                if (moviendoAdelante) {
+                    if (!sonidoNaveReproduciendo && sonidoNave.getStatus() != sf::Sound::Playing) {
+                        sonidoNave.play();
+                        sonidoNaveReproduciendo = true;
+                    }
+                } else {
+                    if (sonidoNaveReproduciendo) {
+                        sonidoNave.stop();
+                        sonidoNaveReproduciendo = false;
+                    }
+                }
+                
                 nave.Mover(window);
                 margen.Limitar(nave);// Disparo de misil o láser (Espacio o click izquierdo del mouse)
             bool disparoActual = sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Mouse::isButtonPressed(sf::Mouse::Left);
@@ -604,8 +728,8 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                         intersecta = true;
                                         break;
                                     }
-                                }
-                                if (intersecta) {
+                                }                                if (intersecta) {
+                                    sonidoExplosion.play(); // Reproducir sonido de explosión
                                     if (itAst->VerificarSiPuedeDestruirse()) {
                                         itAst = asteroides.erase(itAst);
                                         punto.Sumar(30);
@@ -623,7 +747,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                             }
                         };
                         colisionLaser(puntaIzq, finIzq);
-                        colisionLaser(puntaDer, finDer);                    } else {
+                        colisionLaser(puntaDer, finDer);} else {
                         // Láser normal (centro)
                         laserCentral[0].position = puntaNave;
                         laserCentral[0].color = sf::Color::Cyan;
@@ -650,8 +774,8 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                                     intersecta = true;
                                     break;
                                 }
-                            }
-                            if (intersecta) {
+                            }                            if (intersecta) {
+                                sonidoExplosion.play(); // Reproducir sonido de explosión
                                 if (itAst->VerificarSiPuedeDestruirse()) {
                                     itAst = asteroides.erase(itAst);
                                     punto.Sumar(30);
@@ -691,9 +815,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 }
             }            // Dibujar y mover escudo item si está activo
             if (escudoItemActivo) {
-                escudoItem.Mover(limiteY, limiteX, 1.0f);
-                // Colisión con nave
+                escudoItem.Mover(limiteY, limiteX, 1.0f);                // Colisión con nave
                 if (escudoItem.VerificarColision(nave)) {
+                    sonidoObtenerItem.play(); // Reproducir sonido de obtener item
                     invulnerable = true;
                     relojInvulnerable.restart();
                     escudoItemActivo = false;
@@ -708,9 +832,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             }            // --- COLISIONES MISIL-ASTEROIDE ---
             for (auto itAst = asteroides.begin(); itAst != asteroides.end(); ) {
                 bool asteroideEliminado = false;
-                for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {
-                    if (itAst->VerificarColisionConMisil(*itMisil)) {
+                for (auto itMisil = misiles.begin(); itMisil != misiles.end(); ) {                    if (itAst->VerificarColisionConMisil(*itMisil)) {
                         itMisil = misiles.erase(itMisil);
+                        sonidoExplosion.play(); // Reproducir sonido de explosión
                         
                         // Verificar si el asteroide puede destruirse completamente
                         if (itAst->VerificarSiPuedeDestruirse()) {
@@ -845,10 +969,10 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                         it->sprite.move(dir * fuerza);
                         it->x = it->sprite.getPosition().x;
                         it->y = it->sprite.getPosition().y;
-                    }
-                    // Eliminar si colisiona con el centro
+                    }                    // Eliminar si colisiona con el centro
                     float radioColision = agujeroSprite.getGlobalBounds().width * 0.15f;
                     if (dist < radioColision) {
+                        sonidoExplosion.play(); // Reproducir sonido de explosión/absorción
                         it = asteroides.erase(it);
                     } else {
                         ++it;
@@ -907,30 +1031,8 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Sumar puntos solo una vez por pulsación de 'P'
             bool pActual = sf::Keyboard::isKeyPressed(sf::Keyboard::P);
             if (pActual && !pAnterior) {
-                punto.Sumar();
-            }
-            pAnterior = pActual;            // Mostrar puntos en pantalla solo si la fuente se cargó correctamente
-            sf::Font fontRetroGaming;
-            if (fontRetroGaming.loadFromFile("assets/fonts/Retro Gaming.ttf")) {
-                sf::Text textoPuntos;
-                textoPuntos.setFont(fontRetroGaming);
-                textoPuntos.setString("Puntos: " + std::to_string(punto.ObtenerPuntos()));
-                textoPuntos.setCharacterSize(36);
-                textoPuntos.setFillColor(sf::Color::White);
-                // Posicionar en la esquina superior derecha
-                float textWidth = textoPuntos.getLocalBounds().width;
-                textoPuntos.setPosition(window.getSize().x - textWidth - 40, 20);
-                window.draw(textoPuntos);
-            } else {
-                // Si falla la fuente, mostrar con Arial como respaldo
-                if (fuenteCargada) {
-                    sf::Text textoPuntos;
-                    textoPuntos.setFont(fontPuntos);                    textoPuntos.setString("Puntos: " + std::to_string(punto.ObtenerPuntos()));
-                    textoPuntos.setCharacterSize(32);
-                    textoPuntos.setFillColor(sf::Color::White);
-                    textoPuntos.setPosition(20, 20);
-                    window.draw(textoPuntos);
-                }            }
+                punto.Sumar();            }
+            pAnterior = pActual;
 
             // Lógica de aparición de vida extra cada 10 segundos (más frecuente)
             if (!vidaExtraActiva && relojVidaExtra.getElapsedTime().asSeconds() >= 10.0f) {
@@ -938,9 +1040,9 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 vidaExtraActiva = true;
                 relojVidaExtra.restart();
             }            // Dibujar y mover vida extra si está activa
-            if (vidaExtraActiva) {                vidaExtra.Mover(limiteY, limiteX, 1.0f);
-                // Colisión con nave
+            if (vidaExtraActiva) {                vidaExtra.Mover(limiteY, limiteX, 1.0f);                // Colisión con nave
                 if (vidaExtra.VerificarColision(nave)) {
+                    sonidoObtenerItem.play(); // Reproducir sonido de obtener item
                     oportunidad.SumarVida(); // Suma solo una vida
                     vida.EstablecerVidas(oportunidad.ObtenerVidas());
                     vidaExtraActiva = false;
@@ -967,8 +1069,8 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Dibujar y mover doble disparo si está en pantalla
             if (dobleDisparoEnPantalla) {
                 dobleDisparoItem.Mover(limiteY, limiteX, 1.0f);
-                dobleDisparoItem.Dibujar(window);
-                if (dobleDisparoItem.VerificarColision(nave.ObtenerSprite())) {
+                dobleDisparoItem.Dibujar(window);                if (dobleDisparoItem.VerificarColision(nave.ObtenerSprite())) {
+                    sonidoObtenerItem.play(); // Reproducir sonido de obtener item
                     dobleDisparoEnPantalla = false;
                     dobleDisparoActivo = true;
                     tiempoDobleDisparo = 5.0f; // 5 segundos de doble disparo
@@ -1015,9 +1117,7 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             // Dibujar agujero negro si está disponible y el puntaje es suficiente
             if (agujeroCargado && agujeroVisible && punto.ObtenerPuntos() >= 600) {
                 window.draw(agujeroSprite);
-            }
-            
-            // Dibujar elementos de interfaz (puntaje, vidas, etc.)
+            }            // Dibujar elementos de interfaz (puntaje, vidas, etc.)
             vida.Dibujar(window);
             puntaje.EstablecerPuntos(punto.ObtenerPuntos());
             puntaje.Dibujar(window);
@@ -1080,13 +1180,23 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                 fondoPausa.setFillColor(sf::Color(0, 0, 0, 128));
                 window.draw(fondoPausa);
                 window.draw(textoPausa);
-            }
-
-            window.display();
+            }            window.display();
         }
+
+        // Detener música al terminar el juego
+        music.stop();
 
         // --- Mostrar pantalla de Game Over ---
         if (window.isOpen()) {
+            // Cargar fondo de muerte
+            sf::Texture fondoMuerteTexture;
+            fondoMuerteTexture.loadFromFile("assets/images/Fondo_Muerte.png");
+            sf::Sprite fondoMuerteSprite(fondoMuerteTexture);
+            // Escalar el fondo para que cubra toda la ventana
+            float fondoScaleX = window.getSize().x / fondoMuerteSprite.getLocalBounds().width;
+            float fondoScaleY = window.getSize().y / fondoMuerteSprite.getLocalBounds().height;
+            fondoMuerteSprite.setScale(fondoScaleX, fondoScaleY);
+            
             // Guardar puntaje
             TablaDePuntaje tabla("mejores_puntajes.txt");
             std::string nombre = nombreJugador.empty() ? "JUGADOR" : nombreJugador;
@@ -1132,22 +1242,29 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
             float calacaScale = 1.5f;
             calaca.setScale(calacaScale, calacaScale);
             // Calaca abajo a la derecha
-            calaca.setPosition(window.getSize().x - calacaFrameWidth * calacaScale - 30, window.getSize().y - calacaFrameHeight * calacaScale - 30);
-
-            // --- Sonidos Game Over ---
+            calaca.setPosition(window.getSize().x - calacaFrameWidth * calacaScale - 30, window.getSize().y - calacaFrameHeight * calacaScale - 30);            // --- Sonidos Game Over ---
             sf::SoundBuffer bufferGO1, bufferGO2;
             bufferGO1.loadFromFile("assets/music/Game_Over1.ogg");
             bufferGO2.loadFromFile("assets/music/Game_Over2.ogg");
             sf::Sound soundGO1(bufferGO1), soundGO2(bufferGO2);
-            bool go1Played = false, go2Played = false;
+            bool go1Played = false, go2Played = false, musicaMuerteIniciada = false;
 
             while (window.isOpen()) {
                 sf::Event event;
                 while (window.pollEvent(event)) {
                     if (event.type == sf::Event::Closed)
-                        window.close();
-                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+                        window.close();                    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                        sonidoGameStart.play(); // Reproducir sonido al reiniciar
+                        music.stop(); // Detener música del juego
+                        musicaMuerte.stop(); // Detener música de muerte
+                        
+                        // Limpiar buffer de eventos
+                        sf::Event clearEvent;
+                        while (window.pollEvent(clearEvent)) {}
+                        
+                        // Volver al menú principal (sin portada)
                         goto inicio;
+                    }
                 }
                 // Animar calaca
                 if (calacaRelojAnimacion.getElapsedTime().asSeconds() > calacaTiempoPorFrame) {
@@ -1156,11 +1273,23 @@ for (int i = 0; i < cantidadAsteroides; ++i) {
                     int columna = calacaFrameActual % calacaFramesPorFila;
                     calaca.setTextureRect(sf::IntRect(columna * calacaFrameWidth, fila * calacaFrameHeight, calacaFrameWidth, calacaFrameHeight));
                     calacaRelojAnimacion.restart();
+                }                // Reproducir sonidos Game Over1 y Game Over2 una vez, en orden, y luego música de muerte
+                if (!go1Played) { 
+                    soundGO1.play(); 
+                    go1Played = true; 
                 }
-                // Reproducir sonidos Game Over1 y Game Over2 una vez, en orden
-                if (!go1Played) { soundGO1.play(); go1Played = true; }
-                else if (go1Played && !go2Played && soundGO1.getStatus() == sf::Sound::Stopped) { soundGO2.play(); go2Played = true; }
+                else if (go1Played && !go2Played && soundGO1.getStatus() == sf::Sound::Stopped) { 
+                    soundGO2.play(); 
+                    go2Played = true; 
+                }
+                else if (go2Played && !musicaMuerteIniciada && soundGO2.getStatus() == sf::Sound::Stopped) {
+                    // Detener música del juego y reproducir música de muerte
+                    music.stop();
+                    musicaMuerte.play();
+                    musicaMuerteIniciada = true;
+                }
                 window.clear(sf::Color::Black);
+                window.draw(fondoMuerteSprite); // Dibujar fondo de muerte
                 window.draw(calaca);
                 window.draw(textoFin);
                 window.draw(textoTabla);
@@ -1201,19 +1330,38 @@ reiniciar_juego:
         relojDobleDisparo.restart();
         dobleDisparoEnPantalla = false;
         dobleDisparoActivo = false;
-        tiempoDobleDisparo = 0.0f;
+        tiempoDobleDisparo = 0.0f;        
         // Volver a la selección de nave y armamento
-        goto inicio;
-    }
+        music.stop(); // Detener música del juego antes de volver a los menús
+        musicaMuerte.stop(); // Detener música de muerte antes de volver a los menús
+        
+        // Limpiar buffer de eventos
+        sf::Event clearEvent;
+        while (window.pollEvent(clearEvent)) {}
+        
+        goto inicio;    }
 }
 
-// Prototipo de la función de selección de armamento
-int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
+// Implementación de la función de selección de armamento
+int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font, sf::Sound& sonidoGameStart, sf::Music& musicaInicio) {
+    // Asegurar que la música de menú esté sonando
+    if (musicaInicio.getStatus() != sf::Music::Playing) {
+        musicaInicio.play();
+    }
+    
+    // Cargar imagen de fondo
+    sf::Texture fondoTexture;
+    fondoTexture.loadFromFile("assets/images/Fondo.png");
+    sf::Sprite fondoSprite(fondoTexture);
+    float scaleX = window.getSize().x / static_cast<float>(fondoTexture.getSize().x);
+    float scaleY = window.getSize().y / static_cast<float>(fondoTexture.getSize().y);
+    fondoSprite.setScale(scaleX, scaleY);
+
     // Cargar fuente Retro Gaming para todos los textos
     sf::Font fontRetro;
     fontRetro.loadFromFile("assets/fonts/Retro Gaming.ttf");
     sf::Text leyenda("Favor de seleccionar su armamento", fontRetro, 44);
-    leyenda.setFillColor(sf::Color(80, 160, 255));
+    leyenda.setFillColor(sf::Color::White); // Cambiado a blanco
     leyenda.setOutlineColor(sf::Color::Black);
     leyenda.setOutlineThickness(4.f);
     leyenda.setStyle(sf::Text::Bold);
@@ -1246,11 +1394,13 @@ int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
     while(window.isOpen() && !elegido) {
         sf::Event event;
         while(window.pollEvent(event)) {
-            if(event.type == sf::Event::Closed) window.close();
-            if(event.type == sf::Event::KeyPressed) {
+            if(event.type == sf::Event::Closed) window.close();            if(event.type == sf::Event::KeyPressed) {
                 if(event.key.code == sf::Keyboard::Left) seleccion = 0;
                 if(event.key.code == sf::Keyboard::Right) seleccion = 1;
-                if(event.key.code == sf::Keyboard::Enter) elegido = true;
+                if(event.key.code == sf::Keyboard::Enter) {
+                    sonidoGameStart.play(); // Reproducir sonido de selección
+                    elegido = true;
+                }
             }
         }
         float t = animClock.getElapsedTime().asSeconds();
@@ -1259,6 +1409,7 @@ int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font) {
         txtMisil.setPosition(misil1.getPosition().x + misil1.getGlobalBounds().width/2, misil1.getPosition().y + misil1.getGlobalBounds().height + 10 + offset/2.f);
         txtLaser.setPosition(misil2.getPosition().x + misil2.getGlobalBounds().width/2, misil2.getPosition().y + misil2.getGlobalBounds().height + 10 + offset/2.f);
         window.clear(sf::Color::Black);
+        window.draw(fondoSprite); // Dibujar el fondo primero
         window.draw(leyenda);
         window.draw(misil1); window.draw(misil2);
         window.draw(txtMisil); window.draw(txtLaser);
