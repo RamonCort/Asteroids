@@ -2,12 +2,20 @@
 
 !theme blueprint
 
-' ==================== ESTRUCTURAS ====================
+title Diagrama UML Completo - Juego Asteroids
+' ==================== ESTRUCTURAS DE DATOS ===================='
 struct ParticulaRastro {
     + sf::Vector2f posicion
     + float vida
     + sf::Uint8 alpha
-    + ParticulaRastro(sf::Vector2f pos)
+    + ParticulaRastro(sf::Vector2f pos) : posicion(pos), vida(1.0f), alpha(255)
+}
+
+struct AsteroideBackground {
+    + sf::CircleShape shape
+    + sf::Vector2f velocity
+    + float rotation
+    + float rotationSpeed
 }
 
 ' ==================== ENUMERACIONES ====================
@@ -16,7 +24,7 @@ enum TamanoAsteroide {
     PEQUENO = 1
 }
 
-' ==================== CLASE PRINCIPAL ====================
+' ==================== CLASE PRINCIPAL DEL JUEGO ====================
 class Ventana {
     - sf::RenderWindow window
     - sf::Texture texture
@@ -29,9 +37,34 @@ class Ventana {
     + Ventana(int width = 400, int height = 300)
     + void Mostrar()
     + void MostrarInicio()
+    
+    ' Funciones globales definidas en Ventana.cpp
+    ' + int seleccionarArmamento(sf::RenderWindow& window, sf::Font& font)
+    ' + void mostrarInstrucciones(sf::RenderWindow& window, sf::Font& font)
+    ' + int seleccionarNave(sf::RenderWindow& window, sf::Font& font)
+    ' + std::string pedirNombre(sf::RenderWindow& window, sf::Font& font)
 }
 
-' ==================== CLASES DE JUEGO ====================
+' ==================== APLICACION PRINCIPAL ====================
+class AsteroidsApp <<main>> {
+    + static int main()
+    + static Ventana ventana
+}
+
+class CalacaAnimacion <<standalone>> {
+    + static int main()
+    - static sf::Texture textura
+    - static sf::Sprite sprite
+    - static int frameWidth = 204
+    - static int frameHeight = 245
+    - static int totalFrames = 6
+    - static int framesPorFila = 3
+    - static float tiempoPorFrame = 0.12f
+    - static int frameActual
+    - static sf::Clock relojAnimacion
+}
+
+' ==================== JERARQUIA DE NAVES ====================
 class Nave {
     # sf::Texture texture
     # sf::Sprite sprite
@@ -57,6 +90,22 @@ class AstroNave {
     + AstroNave(float x, float y)
 }
 
+' ==================== CLASE JUGADOR ====================
+class Jugador {
+    - float x
+    - float y
+    - float velocidad
+    
+    + Jugador(float x, float y, float velocidad)
+    + void mover(float dx, float dy)
+    + float getX() const
+    + float getY() const
+    + float getVelocidad() const
+    + void setPosicion(float x, float y)
+    + void setVelocidad(float velocidad)
+}
+
+' ==================== ENTIDADES DE JUEGO ====================
 class Asteroide {
     + sf::CircleShape shape
     + float x, y
@@ -85,7 +134,7 @@ class Misil {
     - sf::RectangleShape shape
     - static sf::Texture texturaDisparo
     - sf::Sprite spriteDisparo
-    - float velocidad
+    - float velocidad = 7.0f
     - float anguloDisparo = -90.f
     - sf::Vector2f direccion
     - int frameActual = 0
@@ -108,15 +157,16 @@ class Explosion {
     - static bool textureLoaded
     - sf::Sprite sprite
     - int frameActual
-    - int totalFrames
+    - int totalFrames = 8
     - int framesPorFila
     - int frameWidth
     - int frameHeight
-    - float tiempoPorFrame
+    - float tiempoPorFrame = 0.08f
     - sf::Clock relojAnimacion
     - bool finished
     - int anchoTotal
     - int anchoFrameFila2
+    - static const sf::IntRect explosionFrames[8]
     
     + Explosion(float x, float y)
     + void Actualizar()
@@ -124,7 +174,7 @@ class Explosion {
     + bool VerificarSiEstaTerminada() const
 }
 
-' ==================== CLASES DE INTERFAZ ====================
+' ==================== INTERFAZ DE USUARIO ====================
 class Margen {
     - sf::RectangleShape lineaSuperior
     - sf::RectangleShape lineaInferior
@@ -165,13 +215,13 @@ class Puntaje {
     + void Dibujar(sf::RenderWindow& window)
 }
 
-' ==================== CLASES DE LOGICA ====================
+' ==================== LOGICA DE PUNTUACION ====================
 class Punto {
-    - int puntos
+    - int puntos = 0
     
     + Punto()
-    + void Sumar()
-    + void Sumar(int valor)
+    + void Sumar() : puntos += 10
+    + void Sumar(int valor) : puntos += valor
     + int ObtenerPuntos() const
 }
 
@@ -205,7 +255,7 @@ class TablaDePuntaje {
     - void Guardar()
 }
 
-' ==================== CLASES DE ITEMS ====================
+' ==================== SISTEMA DE ITEMS ====================
 class VidaExtra {
     - float x, y
     - sf::CircleShape shape
@@ -239,13 +289,13 @@ class EscudoItem {
     + EscudoItem(float posicionX, float posicionY)
     + void Mover(float limiteY, float limiteX, float velocidadY = 1.0f)
     + void Dibujar(sf::RenderWindow& window)
-    + bool VerificarColision(Nave& nave)
+    + bool VerificarColision(sf::Sprite& naveSprite)
     + void Reiniciar(float limiteX)
     + float ObtenerY() const
     + float ObtenerX() const
     + void EstablecerX(float nx)
     + void EstablecerY(float ny)
-    + void EstablecerPos(float nx, float ny)
+    + void EstablecerPosicion(float nx, float ny)
 }
 
 class DobleDisparoItem {
@@ -253,8 +303,8 @@ class DobleDisparoItem {
     - sf::Texture textura
     - sf::Sprite sprite
     - float angulo
-    - float velocidadRotacion
-    - int direccionRotacion
+    - float velocidadRotacion = 2.f
+    - int direccionRotacion = 1
     - sf::Clock relojCambioDireccion
     
     + DobleDisparoItem(float posicionX, float posicionY)
@@ -268,54 +318,292 @@ class DobleDisparoItem {
 }
 
 ' ==================== CLASES VACIAS/FUTURAS ====================
-class Jugador {
-    ' ... vacío de momento ...
-}
-
 class AgujeroDeGusano {
-    ' ... definición futura ...
+    ' Definicion futura - placeholder
 }
 
-' ==================== RELACIONES ====================
+' ==================== RELACIONES DE HERENCIA (--|>) ====================
+AstroNave --|> Nave : es una nave especializada
 
-' Herencia
-AstroNave --|> Nave : extends
+' ==================== RELACIONES DE COMPOSICION (*--) ====================
+' Ventana es el contenedor principal que posee completamente estos objetos
+Ventana *-- "1" Nave : tiene exactamente una nave principal
+Ventana *-- "0..*" Asteroide : contiene vector de asteroides (0 a infinitos)
+Ventana *-- "0..*" Misil : contiene vector de misiles (0 a infinitos)
+Ventana *-- "0..*" Explosion : gestiona vector de explosiones (0 a infinitas)
+Ventana *-- "1" Margen : tiene exactamente un sistema de limites
+Ventana *-- "1" Vida : tiene exactamente una interfaz de vidas
+Ventana *-- "1" Puntaje : tiene exactamente una interfaz de puntaje
+Ventana *-- "1" Punto : tiene exactamente un gestor de puntuacion
+Ventana *-- "1" Oportunidad : tiene exactamente un controlador de vidas
+Ventana *-- "0..1" VidaExtra : puede tener maximo una vida extra activa
+Ventana *-- "0..1" EscudoItem : puede tener maximo un escudo activo
+Ventana *-- "0..1" DobleDisparoItem : puede tener maximo un doble disparo activo
+Ventana *-- "0..*" AsteroideBackground : asteroides de fondo en instrucciones
 
-' Composición y Agregación
-Ventana *-- Nave : contiene
-Ventana *-- Asteroide : contiene múltiples
-Ventana *-- Misil : contiene múltiples
-Ventana *-- Explosion : contiene múltiples
-Ventana *-- Margen : contiene
-Ventana *-- Vida : contiene
-Ventana *-- Puntaje : contiene
-Ventana *-- Punto : contiene
-Ventana *-- Oportunidad : contiene
-Ventana *-- VidaExtra : contiene
-Ventana *-- EscudoItem : contiene
-Ventana *-- DobleDisparoItem : contiene
-Ventana *-- TablaDePuntaje : usa
+' Nave contiene particulas de rastro
+Nave *-- "0..*" ParticulaRastro : contiene vector de particulas de rastro
 
-' Dependencias
-Nave ..> ParticulaRastro : usa
-Asteroide ..> TamanoAsteroide : usa
-Asteroide ..> Nave : interactúa con
-Asteroide ..> Misil : interactúa con
-Misil ..> Nave : disparado por
-VidaExtra ..> Nave : colisiona con
-EscudoItem ..> Nave : colisiona con
-DobleDisparoItem ..> Nave : colisiona con
-Margen ..> Nave : limita
+' ==================== RELACIONES DE AGREGACION (o--) ====================
+' Objetos que usa pero no posee completamente
+Ventana o-- "1" TablaDePuntaje : usa para persistencia (objeto independiente)
+Ventana o-- "1" sf::RenderWindow : usa ventana de SFML
+Ventana o-- "1" sf::Font : usa fuente compartida
+Ventana o-- "1" sf::Music : usa musica de fondo
 
-' Notas adicionales
-note top of Ventana : Clase principal que coordina\ntodo el juego y maneja\nla ventana de SFML
+' ==================== RELACIONES DE ASOCIACION (--) ====================
+' Relaciones bidireccionales o de colaboracion
+Margen -- "1" Nave : limita y contiene la nave
+Asteroide -- "0..*" Misil : pueden colisionar entre ellos
+Asteroide -- "1" Nave : pueden colisionar con la nave
+VidaExtra -- "1" Nave : detecta colision con la nave
+EscudoItem -- "1" Nave : detecta colision con la nave  
+DobleDisparoItem -- "1" Nave : detecta colision con la nave
+Explosion -- "1" Asteroide : se crea al destruir asteroide
 
-note right of TamanoAsteroide : Enumeración que define\nlos diferentes tamaños\nde asteroides
+' ==================== RELACIONES DE DEPENDENCIA (..>) ====================
+' Relaciones de uso temporal o creacion
+Nave ..> ParticulaRastro : crea y actualiza particulas
+Nave ..> sf::RenderWindow : usa para dibujar y obtener input
+Nave ..> sf::Mouse : usa para apuntar hacia el mouse
+Nave ..> sf::Keyboard : usa para detectar movimiento
 
-note bottom of ParticulaRastro : Estructura para efectos\nvisuales de rastro de la nave
+Asteroide ..> TamanoAsteroide : usa enumeracion para definir tamano
+Asteroide ..> Nave : verifica colisiones
+Asteroide ..> Misil : verifica impactos de misiles
+Asteroide ..> sf::Vector2f : usa para calculos de posicion
 
-note left of Asteroide : Los asteroides pueden dividirse\nal ser impactados por misiles
+Misil ..> Nave : es creado por la nave con angulo especifico
+Misil ..> sf::RenderWindow : usa para verificar limites de pantalla
 
-note right of Explosion : Animación sprite con frames\npara efectos visuales
+Explosion ..> Asteroide : se crea al destruir un asteroide
+Explosion ..> sf::Clock : usa para controlar animacion
 
+VidaExtra ..> sf::Clock : usa para cambio de direccion de rotacion
+EscudoItem ..> sf::RenderWindow : usa para dibujar
+DobleDisparoItem ..> sf::Clock : usa para animacion de rotacion
+
+Margen ..> Nave : limita posicion de la nave dentro del area
+Margen ..> sf::RenderWindow : usa para dibujar elementos visuales
+
+Vida ..> sf::Font : carga fuente para texto
+Vida ..> sf::Text : muestra informacion de vidas
+Puntaje ..> sf::Font : carga fuente para texto
+Puntaje ..> sf::Text : muestra informacion de puntaje
+
+Punto ..> int : maneja valores enteros de puntuacion
+Oportunidad ..> Punto : puede afectar la puntuacion
+Oportunidad ..> Vida : modifica el numero de vidas
+
+TablaDePuntaje ..> std::vector : usa para almacenar entradas
+TablaDePuntaje ..> std::string : usa para nombres y archivo
+TablaDePuntaje ..> std::fstream : usa para persistencia en archivo
+
+AsteroidsApp ..> Ventana : crea instancia y ejecuta metodos
+CalacaAnimacion ..> sf::Texture : carga textura de sprite
+CalacaAnimacion ..> sf::Sprite : maneja animacion de frames
+
+Jugador ..> float : usa coordenadas y velocidad como primitivos
+
+' Funciones globales de Ventana.cpp
+seleccionarArmamento ..> sf::RenderWindow : usa ventana para input/output
+seleccionarArmamento ..> sf::Font : usa fuente para texto
+mostrarInstrucciones ..> sf::RenderWindow : usa ventana para mostrar
+mostrarInstrucciones ..> sf::Font : usa fuente para texto
+mostrarInstrucciones ..> AsteroideBackground : crea asteroides animados
+seleccionarNave ..> sf::RenderWindow : usa ventana para seleccion
+seleccionarNave ..> sf::Font : usa fuente para texto
+pedirNombre ..> sf::RenderWindow : usa ventana para input
+pedirNombre ..> sf::Font : usa fuente para texto
+
+' ==================== RELACIONES DE USO CON RECURSOS (..>) ====================
+' Relaciones con archivos de assets y recursos externos
+Explosion ..> "assets/images/Explocion.png" : carga textura estatica compartida
+Misil ..> "assets/images/Disparo.png" : carga textura animada (5 frames horizontales)
+Asteroide ..> "assets/images/Asteroide.pixil.png" : carga textura estatica compartida
+Nave ..> "assets/images/nave.png" : textura predeterminada de nave basica
+AstroNave ..> "assets/images/AstroNave_pixil.png" : textura especifica de astro-nave
+VidaExtra ..> "assets/images/sprite.png" : sprite animado de estrella
+VidaExtra ..> "assets/images/Corazon.png" : sprite de corazon para vida extra
+EscudoItem ..> "assets/images/Escudo.item.png" : sprite de escudo protector
+DobleDisparoItem ..> "assets/images/Doble_Disparo_Item.png" : sprite de item de doble disparo
+Vida ..> "assets/images/Corazon.png" : corazones para mostrar vidas en interfaz
+Vida ..> "assets/arial.ttf" : fuente para texto de vidas
+Puntaje ..> "assets/arial.ttf" : fuente para texto de puntaje
+Ventana ..> "assets/fonts/Retro Gaming.ttf" : fuente principal del juego
+Ventana ..> "assets/music/videoplayback.ogg" : musica de fondo principal
+Ventana ..> "assets/music/Laser2.ogg" : sonido de disparo laser
+Ventana ..> "assets/music/Game_Over1.ogg" : primer sonido de game over
+Ventana ..> "assets/music/Game_Over2.ogg" : segundo sonido de game over
+Ventana ..> "assets/images/Portada.jpg" : imagen de portada del juego
+Ventana ..> "assets/images/Titulo.png" : imagen del titulo del juego
+Ventana ..> "assets/images/Fondo.png" : fondo para input de nombre
+Ventana ..> "assets/images/Fondo2.png" : fondo principal del juego
+Ventana ..> "assets/images/Calaca_Sprite.png" : sprite de calavera para game over
+CalacaAnimacion ..> "assets/images/Calaca_Sprite.png" : sprite animado independiente
+TablaDePuntaje ..> "mejores_puntajes.txt" : archivo de persistencia de puntajes
+
+' ==================== RELACIONES DE MULTIPLICIDAD ESPECIFICAS ====================
+' Relaciones con multiplicidades exactas basadas en el codigo
+Ventana "1" -- "5" Asteroide : inicializa con 5 asteroides
+Ventana "1" -- "3" Oportunidad : jugador tiene 3 oportunidades iniciales
+Explosion "1" -- "8" Frame : cada explosion tiene 8 frames de animacion
+Misil "1" -- "5" Frame : cada misil tiene 5 frames de animacion
+CalacaAnimacion "1" -- "6" Frame : calaca tiene 6 frames (3x2 matriz)
+Asteroide "1" -- "2" Asteroide : asteroide grande se divide en 2 pequenos
+VidaExtra "1" -- "25" segundos : aparece cada 25 segundos
+EscudoItem "1" -- "25" segundos : aparece cada 25 segundos
+EscudoItem "1" -- "5" segundos : duracion de invulnerabilidad
+DobleDisparoItem "1" -- "5" segundos : duracion del poder
+TablaDePuntaje "1" -- "0..5" Entrada : maximo 5 mejores puntajes
+
+' ==================== NOTAS DE ARQUITECTURA ====================
+note top of Ventana : Clase coordinadora principal del juego.\nContiene toda la logica de juego, manejo de eventos,\nrenderizado, menus, seleccion de nave/armamento,\ninstrucciones, pausa, y pantalla de Game Over.
+
+note right of TamanoAsteroide : Enumeracion que define tamanos:\nGRANDE (se divide al impacto)\nPEQUENO (se destruye completamente)
+
+note bottom of ParticulaRastro : Sistema de efectos visuales.\nCada particula tiene vida limitada\ny se desvanece gradualmente.
+
+note left of Asteroide : Los asteroides grandes se dividen\nen dos pequenos al ser impactados.\nMovimiento teledirigido hacia la nave.\nTextura estatica compartida.
+
+note right of Explosion : Sistema de animacion por frames.\n8 frames definidos en array estatico.\nTextura: explosionFrames[8]
+
+note top of Misil : Proyectiles con animacion sprite.\n5 frames horizontales de animacion.\nDireccion calculada por angulo.\nVelocidad y fisica configurables.
+
+note bottom of TablaDePuntaje : Persistencia de puntajes en archivo.\nMaximo 5 entradas ordenadas por puntaje.\nGuarda/carga desde "mejores_puntajes.txt".
+
+note left of Margen : Sistema de limites visuales del juego.\nContiene la nave dentro del area de juego.\n8 elementos: 4 lineas + 4 esquinas circulares.
+
+note right of AsteroidsApp : Punto de entrada principal del programa.\nInstancia Ventana y ejecuta secuencia:\n1. MostrarInicio() - pantalla de portada\n2. Mostrar() - bucle principal del juego
+
+note top of CalacaAnimacion : Aplicacion standalone completamente independiente.\nDemo de animacion sprite de calavera.\nNo forma parte del juego principal.
+
+note bottom of Jugador : Clase basica con posicion y velocidad.\nMetodos get/set para coordenadas.\nFuncionalidad de movimiento simple.\nPuede ser base para futuras expansiones.
+
+note left of VidaExtra : Item que otorga vida adicional.\nAnimacion de rotacion con cambio de direccion.\nDeteccion de colision con la nave.\nSprite de estrella animado.
+
+note right of EscudoItem : Item que otorga invulnerabilidad temporal.\nAparece cada 25 segundos.\nDuracion de 5 segundos de proteccion.\nSprite de escudo.
+
+note top of DobleDisparoItem : Power-up que habilita disparo doble.\nDuracion de 5 segundos.\nMisiles o laseres laterales simultaneos.\nSprite de doble disparo.
+
+note bottom of AsteroideBackground : Estructura para asteroides decorativos.\nUsados en pantalla de instrucciones.\nMovimiento y rotacion continua.\nSe reposicionan al salir de pantalla.
+
+' ==================== PATRONES DE DISEÑO ====================
+note as PatronesNote
+**Patrones de Diseño Identificados:**
+
+• **Singleton Pattern**: Texturas estáticas compartidas
+  - Explosion::texture, Misil::texturaDisparo
+  - Asteroide::textureAsteroide
+
+• **Factory Pattern**: Creación y división de asteroides
+  - Asteroide::Dividir() crea nuevos asteroides
+
+• **Observer Pattern**: Sistema de detección de colisiones
+  - Múltiples clases observan colisiones con Nave
+
+• **State Pattern**: Estados de items y power-ups
+  - Items activos/inactivos, invulnerabilidad temporal
+
+• **Template Method**: Estructura común de items
+  - Patrón similar en VidaExtra, EscudoItem, DobleDisparoItem
+
+• **Strategy Pattern**: Selección de armamento
+  - Misiles vs. Láser con comportamientos diferentes
+
+• **Facade Pattern**: Ventana como fachada del sistema
+  - Coordina todas las subsistemas del juego
+end note
+
+' ==================== RELACIONES DE MULTIPLICIDAD Y RELACIONES ====================
+note as RelacionesNote
+**Multiplicidades y Relaciones Detalladas:**
+
+**Relaciones "ES" (--|>):**
+• AstroNave ES una Nave especializada
+
+**Relaciones "TIENE" (*--):**
+• Ventana TIENE exactamente 1 nave, 1 margen, 1 vida, etc.
+• Ventana TIENE 0..* asteroides, misiles, explosiones
+• Nave TIENE 0..* partículas de rastro
+
+**Relaciones "USA" (o--):**
+• Ventana USA TablaDePuntaje para persistencia
+• Ventana USA sf::RenderWindow, sf::Font, sf::Music
+
+**Relaciones "DEPENDE DE" (..>):**
+• Todas las clases dependen de SFML para gráficos
+• Items dependen de colisiones con nave
+• Animaciones dependen de sf::Clock para timing
+
+**Multiplicidades Específicas:**
+• 5 asteroides iniciales, máximo ∞
+• 3 vidas/oportunidades iniciales
+• 8 frames por explosión, 5 por misil, 6 por calaca
+• Máximo 5 puntajes en tabla de mejores
+• Items aparecen cada 25 segundos
+• Poderes duran 5 segundos
+end note
+
+' ==================== FUNCIONALIDADES PRINCIPALES ====================
+note as FuncionalidadesNote
+**Funcionalidades Implementadas:**
+
+• **Sistema de Menús Completo**:
+  - Pantalla de inicio con música
+  - Selección de nave (2 opciones)
+  - Selección de armamento (Misil/Láser)  
+  - Instrucciones detalladas con sprites animados
+  - Captura de nombre del jugador
+
+• **Mecánicas de Juego**:
+  - Movimiento de nave con rastro de partículas
+  - Sistema de disparos (misiles animados o láser)
+  - Asteroides con división al impacto
+  - Sistema de vidas y puntuación
+  - Power-ups: vida extra, escudo, doble disparo
+  - Pausa con ESC
+
+• **Efectos Visuales y Audio**:
+  - Explosiones animadas por frames
+  - Música de fondo y efectos de sonido
+  - Fuentes personalizadas (Retro Gaming)
+  - Sprites animados para todos los elementos
+
+• **Persistencia de Datos**:
+  - Tabla de mejores puntajes
+  - Guardado automático en archivo
+
+• **Arquitectura Modular**:
+  - Separación clara de responsabilidades
+  - Clases especializadas para cada elemento
+  - Sistema de coordenadas y física simple
+end note
+
+' ==================== RELACIONES ESTÁTICAS Y SINGLETON ====================
+' Texturas compartidas (patrón Singleton)
+Explosion ||-- "1" StaticTexture : comparte textura estática entre todas las instancias
+Misil ||-- "1" StaticTexture : comparte textura de disparo estática
+Asteroide ||-- "1" StaticTexture : comparte textura de asteroide estática
+
+' ==================== RELACIONES DE CREACIÓN Y DESTRUCCIÓN ====================
+Ventana ..> Misil : crea misiles al disparar (armamento 0)
+Ventana ..> LaserBeam : crea rayos láser al disparar (armamento 1)
+Asteroide ..> Explosion : crea explosión al ser destruido
+Asteroide ..> Asteroide : crea 2 asteroides pequeños al dividirse (si es grande)
+ParticulaRastro ..> FadeEffect : se desvanece con el tiempo (vida decremental)
+
+' ==================== RELACIONES DE CONTROL DE FLUJO ====================
+Ventana "1" -- "2" TipoNave : selecciona entre nave normal y astro-nave
+Ventana "1" -- "2" TipoArmamento : selecciona entre misil y láser
+Ventana "1" -- "1" EstadoPausa : controla pausa con tecla ESC
+Ventana "1" -- "1" GameOver : controla fin de juego
+Ventana "1" -- "∞" GameLoop : bucle principal infinito hasta game over
+
+' ==================== RELACIONES DE ENTRADA/SALIDA ====================
+Ventana ..> sf::Keyboard : detecta teclas (WASD, Space, Enter, ESC)
+Ventana ..> sf::Mouse : detecta clicks y posición del mouse
+Ventana ..> sf::Event : procesa eventos de ventana
+Nave ..> sf::Keyboard : usa WASD para movimiento
+Nave ..> sf::Mouse : apunta hacia la posición del mouse
 @enduml

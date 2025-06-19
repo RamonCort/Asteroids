@@ -1,6 +1,7 @@
 {
     "github.copilot.nextEditSuggestions.enabled": false,
     "files.associations": {
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "numbers": "cpp"
     }
 }
