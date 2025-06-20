@@ -121,7 +121,7 @@
 
 1. **Clonar el repositorio**:
    ```bash
-   git clone https://github.com/tu-usuario/Asteroids.git
+   git clone https://github.com/RamonCort/Asteroids.git
    cd Asteroids
    ```
 

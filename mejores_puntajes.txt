@@ -1,5 +1,2 @@
-Geo 2140
-gEO 2040
-g 2000
-Geo 1990
-d 1930
+Geovanni 32630
+Ramon 30420
